@@ -66,7 +66,7 @@ class User:
 
 class Member:
 
-    def __init__(self, isAdmin)
+    def __init__(self, isAdmin):
         self.member_id = str(uuid.uuid4())
         self.isAdmin = isAdmin
 
