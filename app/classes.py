@@ -41,8 +41,9 @@ class User:
 
 class Member:
 
-    def __init__(self, isAdmin):
+    def __init__(self,user: User, isAdmin: bool = False):
         self.member_id = str(uuid.uuid4())
+        self.user = user
         self.isAdmin = isAdmin
    
     
@@ -94,10 +95,7 @@ class ExpenseGroup:
         self.members = []  #List of Member objects
         self.expenses = []
         self.audit_trail = []
-
-    def is_member(self,member: Member):
-        return member in self.members
-    
+ 
     #validation helper methods
     def _require_member(self, member):
         """Validates that the member belongs to this group"""
@@ -116,17 +114,24 @@ class ExpenseGroup:
         if not (member.is_admin or expense.created_by == member):
             raise PermissionError("Access denied. Non-admins can only manage their own expenses.")
         
+    def _find_expense(self,expense_id):
+        """Finds and returns an expense by ID, raises ValueError if not found"""
+        expense = next((e for e in self.expenses if e.id == expense_id),None)
+        if expense is None:
+            raise ValueError(f"Expense with id: {expense_id} not found")
     
     def add_member(self,performed_by: Member, new_user: User, is_admin= False):
         """Adds a user to the group if the performer is an admin"""
         self._require_admin(performed_by)
 
         for member in self.members:
-            if member.user == new_user:
+            if member.user == new_user: 
                 raise Exception("User is already a member of this group.")
      
         new_member = Member(new_user,is_admin) 
         self.members.append(new_member)
+
+        return new_member
 
     
     def remove_member(self,performed_by: Member, member : Member):
@@ -138,13 +143,15 @@ class ExpenseGroup:
         self.members.remove(member)
         
 
-    def update_member (self, performed_by: Member, target_member: Member):
+    def update_member (self, performed_by: Member, member: Member):
         self._require_admin(performed_by)
-        target_member.is_admin = True
+        member.is_admin = True
+
+        return member
         
     def view_members(self):
-        return f"Current member list: {self.members}" #Return member objects.
-    #Member names will be added later after the Member and User classes are implemented
+        member_list = ", ".join(member.user.name for member in self.members)
+        return f"Current member list: {member_list}" 
 
     def add_expense(
         self,
@@ -157,38 +164,33 @@ class ExpenseGroup:
 
         self._require_member(current_member)
         self._require_member(payer)
-        self._require_creator_or_admin(current_member)
-        
         expense = Expense(amount, description,payer,cost_breakdown, created_by)
         self.expenses.append(expense)
-        
-        
+
+        return expense
+
     def update_expense(self, member, expense_id, **details):
-        self._require_member(member)
+        """Update an expense if the member is either the expense creator or an admin"""
+        expense = self._find_expense(expense_id)
         self._require_creator_or_admin(member, expense)
         
-        expense = next((e for e in self.expenses if e.id == expense_id), None)
-        if expense is None:
-            raise ValueError(f"Expense with id: {expense_id} not found")
-         
         if 'amount' in details :
             expense.update_amount(details['amount'])
         if 'description' in details:
             expense.update_description(details['description'])
         if 'payer' in details:
+            self._require_member(details['payer'])
             expense.update_payer(details['payer'])
         if 'cost_breakdown' in details:
             expense.update_cost_breakdown(details['cost_breakdown'])
+
+        return expense
         
 
-    def delete_expense(self,member:Member, expense, expense_id):
-        self._require_member(member)
+    def delete_expense(self,member:Member, expense_id):
+        """Delete an expense if the member is either the expense creator or an admin"""
+        expense = self._find_expense(expense_id)
         self._require_creator_or_admin(member, expense)
-        
-        expense = next((e for e in self.expenses if e.id == expense_id), None)
-        if expense is None:
-            raise ValueError(f"Expense with id: {expense_id} not found")
-
         self.expenses.remove(expense)
 
     def view_expenses(self, member):
@@ -204,8 +206,8 @@ class ExpenseGroup:
                 "description": expense.description,
                 "amount": expense.amount,
                 "date": expense.date.strftime("%Y-%m-%d %H:%M"),
-                "payer": getattr(expense.payer, "name", str(expense.payer)),
-                "created_by": getattr(expense.created_by, "name", str(expense.created_by)),
+                "payer": expense.payer.user.name,
+                "created_by": expense.created_by.user.name,
                 "cost_breakdown": expense.cost_breakdown
             })
         return expense_list
