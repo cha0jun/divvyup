@@ -3,10 +3,12 @@ import bcrypt
 import uuid
 
 class User:
+    # class level attributes
     user_id = 0
     users = {}
     sessions = {}
 
+    # instance level attributes
     def __init__(self, user_id, name, email, password):
         self.user_id = user_id
         self.name = name
@@ -24,6 +26,7 @@ class User:
 
     @classmethod
     def logIn(cls, email, password):
+        # .get() <= dict method
         user = cls.users.get(email)
         if user and bcrypt.checkpw(password, user.password):
             session_id = str(uuid.uuid4())
@@ -100,29 +103,30 @@ class ExpenseGroup:
     
     #validation helper methods
     def _require_member(self, member):
-        """Validates that the member belongs to this group"""
+        # Validates that the member belongs to this group
         if member not in self.members:
             raise PermissionError("Access denied. You must be a member of this group to perform this action.")
         
     def _require_admin(self, member):
-        """Validates that the member is both a group member and an admin"""
+        # Validates that the member is both a group member and an admin
         self._require_member(member)
         if not member.is_admin:
             raise PermissionError("Only admins can perform this action.")
         
     def _require_creator_or_admin(self, member, expense):
-        """Validates that the member is either the expense creator or an admin"""
+        # Validates that the member is either the expense creator or an admin
         self._require_member(member)
         if not (member.is_admin or expense.created_by == member):
             raise PermissionError("Access denied. Non-admins can only manage their own expenses.")
         
     
     def add_member(self,performed_by: Member, new_user: User, is_admin= False):
-        """Adds a user to the group if the performer is an admin"""
+        # Adds a user to the group if the performer is an admin
         self._require_admin(performed_by)
 
         for member in self.members:
             if member.user == new_user:
+                # can consider to just break instead of throwing exception to let the method go through without adding. helps to also keep method idempotent - Matthew
                 raise Exception("User is already a member of this group.")
      
         new_member = Member(new_user,is_admin) 
@@ -130,7 +134,7 @@ class ExpenseGroup:
 
     
     def remove_member(self,performed_by: Member, member : Member):
-        """Removes a member from the group if performer is an admin"""
+        # Removes a member from the group if performer is an admin
         self._require_admin(performed_by)
         if member not in self.members:
             raise Exception ("User is not a member of this group.")
@@ -138,9 +142,10 @@ class ExpenseGroup:
         self.members.remove(member)
         
 
-    def update_member (self, performed_by: Member, target_member: Member):
+    def update_member(self, performed_by: Member, target_member: Member):
         self._require_admin(performed_by)
         target_member.is_admin = True
+        # missing logic to update member - Matthew
         
     def view_members(self):
         return f"Current member list: {self.members}" #Return member objects.
@@ -216,53 +221,6 @@ class ExpenseGroup:
     def view_audit_trail():
         pass
 
-
-
-
-        
-    
-class User:
-    user_id = 0
-    users = {}
-    sessions = {}
-
-    def __init__(self, user_id, name, email, password):
-        self.user_id = user_id
-        self.name = name
-        self.email = email
-        self.password = password
-
-    @classmethod
-    def signUp(cls, name, email, password):
-        if email in cls.users:
-            return False
-        cls.user_id += 1
-        user = cls(cls.user_id, name, email, bcrypt.hashpw(password, bcrypt.gensalt()))
-        cls.users[email] = user
-        return True
-
-    @classmethod
-    def logIn(cls, email, password):
-        user = cls.users.get(email)
-        if user and bcrypt.checkpw(password, user.password):
-            session_id = str(uuid.uuid4())
-            cls.sessions[session_id] = email
-            return True
-        return False
-
-    @classmethod
-    def logOut(cls, session_id):
-        if session_id in cls.sessions:
-            del cls.sessions[session_id]
-            return True
-        return False
-    
-
-class Member:
-
-    def __init__(self, isAdmin):
-        self.member_id = str(uuid.uuid4())
-        self.isAdmin = isAdmin
 
         
 
