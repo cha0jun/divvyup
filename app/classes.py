@@ -103,6 +103,15 @@ class RecurringExpense(Expense):
         self.frequency = frequency
         self.end_date = end_date
 
+class AuditTrail:
+    _audit_id = 0
+    def __init__(self, change_by:Member, change_description:str):
+        AuditTrail._audit_id += 1
+        self.id = AuditTrail._audit_id
+        self.timestamp = datetime.now
+        self.change_by = change_by
+        self.change_description = change_description       
+
 class ExpenseGroup:
     def __init__(self, group_id:int, group_name: str, description:str,createdBy: User):
         self.group_id = group_id
@@ -112,7 +121,6 @@ class ExpenseGroup:
         self.members = []  #List of Member objects
         self.expenses = []
         self.audit_trail = []
-        #amount
  
     #validation helper methods
     def _require_member(self, member):
@@ -183,7 +191,16 @@ class ExpenseGroup:
 
         return results
     
-
+    #-------Audit Methods---------
+    def view_audit_trail(self, performed_by:Member):
+        # admin permission check
+        self._require_admin(performed_by)
+        audit_list = ", ".join(audit.change_description for audit in self.audit_trail)
+        return f"Current audit trail: {audit_list}"
+    
+    def add_audit(self, performed_by:Member, change_desc:str):
+        self.audit_trail.append(AuditTrail(performed_by,change_desc))
+    
     #-------Member Management Methods---------
     def add_member(self,performed_by: Member, new_user: User, is_admin= False):
         # Adds a user to the group if the performer is an admin
@@ -196,7 +213,8 @@ class ExpenseGroup:
      
         new_member = Member(new_user,is_admin) 
         self.members.append(new_member)
-
+        
+        self.add_audit(performed_by,change_desc=f"{new_member} added to group by {performed_by}.")
         return new_member
 
     
@@ -207,13 +225,16 @@ class ExpenseGroup:
             raise Exception ("User is not a member of this group.")
         
         self.members.remove(member)
+        
+        self.add_audit(performed_by,change_desc=f"{member} removed from group by {performed_by}.")
         return member
         
 
     def update_member (self, performed_by: Member, member: Member):
         self._require_admin(performed_by)
         member.is_admin = True
-
+    # @May missing update logic in method
+        self.add_audit(performed_by,change_desc=f"{member} information updated by {performed_by}.")
         return member
         
     def view_members(self):
@@ -245,7 +266,8 @@ class ExpenseGroup:
 
         #update member balances
         self._update_balances_for_expense(expense)
-
+        
+        self.add_audit(created_by,change_desc=f"Expense (amount: {amount}, description: {description}, payer: {payer}) added to group by {created_by}.")
         return expense
     
   
@@ -275,9 +297,9 @@ class ExpenseGroup:
         #update new balance effects
         self._update_balances_for_expense(expense)
 
+        self.add_audit(member,change_desc=f"Expense (amount: {details['amount']}, description: {details['description']}, payer: {details['payer']}) updated by {member}.")
         return expense
         
-
     def delete_expense(self,member:Member, expense_id):
         """Delete an expense if the member is either the expense creator or an admin"""
         expense = self._find_expense(expense_id)
@@ -286,6 +308,7 @@ class ExpenseGroup:
        #reverse old expense for balance calculation
         self._reverse_balances_for_expense(expense.payer, expense.cost_breakdown)
         self.expenses.remove(expense)
+        self.add_audit(member,change_desc=f"Expense (Id: {expense_id})  deleted by {member}.")
 
     def view_expenses(self, member):
         self._require_member(member)
@@ -342,9 +365,8 @@ class ExpenseGroup:
                                                     }
         return all_balances
 
-    #-------Audit Methods---------
-    def view_audit_trail():
-        pass
+
+
 
         
         
