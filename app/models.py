@@ -21,5 +21,5 @@ class Member(SQLModel, table = True):
     expense_group_id: int = Field(foreign_key="expense_group.id",nullable=False)
     is_admin: bool = Field(default=False)
     added_by: Optional[int] = Field(default=None, foreign_key="member.id")
-    created_on: datetime = Field(default_factory=datetime.now, nullable=False)
+    added_on: datetime = Field(default_factory=datetime.now, nullable=False)
 

@@ -54,12 +54,12 @@ CREATE TABLE member (
     id INTEGER PRIMARY KEY,
     user_id INTEGER NOT NULL,
     expense_group_id INTEGER NOT NULL,
-    created_by INTEGER NOT NULL,
-    created_on TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    added_by INTEGER NOT NULL,
+    added_on TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     FOREIGN KEY(user_id) REFERENCES "user"(id) ON DELETE CASCADE,
     FOREIGN KEY(expense_group_id) REFERENCES expense_group(id) ON DELETE CASCADE,
-    FOREIGN KEY(created_by) REFERENCES "user"(id),
+    FOREIGN KEY(added_by) REFERENCES "member"(id),
 
     -- Ensure a user can only join a group once.
     UNIQUE(user_id, expense_group_id)
