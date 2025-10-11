@@ -2,6 +2,8 @@ from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional
 
+# interface for frontend to backend
+
 class UserRead(BaseModel):
     id: int
     name: str
@@ -38,3 +40,40 @@ class ExpenseGroupRead(ExpenseGroupBase):
     creator: UserRead
     modified_on: Optional[datetime] = None
     modified_by: Optional[UserRead] = None
+    
+class AuditRead(BaseModel):
+    change_description: str
+    created_by: UserRead
+    created_on: datetime
+
+class ExpenseBase(BaseModel):
+    name: str
+    description: Optional[str] = None
+    payer: UserRead
+    amount: float
+    payment_date: datetime
+    modified_by: Optional[UserRead] = None
+    
+# might be possible to use ExpenseBase across
+    
+class ExpenseRead(ExpenseBase):
+    pass
+
+class ExpenseCreate(ExpenseBase):
+    pass
+
+class ExpenseUpdate(ExpenseBase):
+    pass
+
+class RecurringExpenseBase(ExpenseBase):
+    frequency: str
+    start_date: datetime
+    end_date: datetime
+
+## to create delete when nesscessary
+
+class BreakdownBase(BaseModel):
+    amount: float
+    paid_by: UserRead
+    
+    
