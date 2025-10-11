@@ -4,6 +4,16 @@ from datetime import datetime
 
 # interface for business logic to db
 
+class User(SQLModel, table=True):
+    __tablename__ = "user"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: str = Field(nullable=False)
+    email: str = Field(nullable=False, unique=True)
+    password_hash: str = Field(nullable=False)
+    created_on: datetime = Field(default_factory=datetime.now, nullable=False)
+    modified_on: datetime = Field(default_factory=datetime.now, nullable=False)
+
 class ExpenseGroup(SQLModel, table=True):
     __tablename__ = "expense_group"
 

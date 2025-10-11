@@ -1,7 +1,7 @@
 from fastapi import HTTPException, status
 from models import Member, ExpenseGroup, User
 from sqlmodel import Session, select
-from schemas import MemberUpdate, ExpenseGroupCreate, ExpenseGroupUpdate
+from schemas import UserRead, MemberUpdate, ExpenseGroupCreate, ExpenseGroupUpdate, MemberRead
 from typing import List, Optional
 from datetime import datetime
 
@@ -39,18 +39,29 @@ def add_member_to_group(db: Session, group_id: int, user_to_add: User, performin
     db.refresh(new_member)
     return new_member
 
-def remove_member_from_group(db: Session, member_id: int)-> Member:
+def remove_member_from_group(db: Session, member_id: int, group_id: int)-> Member:
     db_member = get_member_by_member_id(db,member_id)
     if not db_member:
         raise HTTPException(status_code=404, detail="Member not found")
+    if db_member.expense_group_id != group_id:
+        raise HTTPException(
+            status_code=404,
+            detail="Member not found in this group"
+        )
     db.delete(db_member)
     db.commit()
     return db_member
 
-def update_member_role(db: Session, member_id: int,member_update: MemberUpdate)-> Member:
+def update_member_role(db: Session, member_id: int,group_id: int, member_update: MemberUpdate)-> Member:
     db_member = get_member_by_member_id(db, member_id=member_id)
     if not db_member:
         raise HTTPException(status_code=404, detail="Member not found")
+    
+    if db_member.expense_group_id != group_id:
+        raise HTTPException(
+            status_code=404,
+            detail="Member not found in this group"
+        )
     
     db_member.is_admin = member_update.is_admin
     db.commit()
@@ -59,7 +70,20 @@ def update_member_role(db: Session, member_id: int,member_update: MemberUpdate)-
 
 def get_group_members(db: Session, group_id: int) -> List[Member]:
     """Retrieve all members of a group."""
-    return db.exec(select(Member).where(Member.expense_group_id == group_id)).all()
+    statement = select(Member, User).where(
+        Member.expense_group_id == group_id,
+        Member.user_id == User.id
+    ) #JOIN user table ON member.user_id = user.id
+
+    results = db.exec(statement).all()
+    return [MemberRead(
+            id=member.id,
+            is_admin=member.is_admin,
+            user=UserRead(id=user.id, name=user.name, email=user.email),
+            created_on=member.added_on
+        )
+        for member, user in results
+    ]
 
 
 #----ExpenseGroup------

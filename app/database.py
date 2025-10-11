@@ -3,7 +3,8 @@ from fastapi import Depends
 from sqlmodel import Session, create_engine
 from typing import Annotated
 
-DATABASE_URL = "../data/app.db" # hardcoded relative path as db is on the same server as app
+db_path = "../data/app.db" # hardcoded relative path as db is on the same server as app
+DATABASE_URL = f"sqlite:///{db_path}"
 engine = create_engine(DATABASE_URL, echo =False)
 
 def get_session():
