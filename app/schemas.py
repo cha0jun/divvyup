@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from datetime import datetime
+from typing import Optional
 
 class UserRead(BaseModel):
     id: int
@@ -19,3 +20,21 @@ class MemberRead(BaseModel):
     is_admin: bool
     user: UserRead # Show who the member is
     created_on: datetime
+
+class ExpenseGroupBase(BaseModel):
+    name: str
+    description: Optional[str] = None
+
+class ExpenseGroupCreate(ExpenseGroupBase):
+    pass
+
+class ExpenseGroupUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+
+class ExpenseGroupRead(ExpenseGroupBase):
+    id: int
+    created_on: datetime
+    creator: UserRead
+    modified_on: Optional[datetime] = None
+    modified_by: Optional[UserRead] = None
