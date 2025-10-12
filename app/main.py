@@ -1,9 +1,9 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from typing import List
-from models import *
-from schemas import *
-from database import SessionDep
-from crud import *
+from .models import *
+from .schemas import *
+from .database import SessionDep
+from .crud import *
 
 app = FastAPI()
 
