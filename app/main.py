@@ -7,8 +7,19 @@ from .crud import *
 
 app = FastAPI()
 
+#------User Routes-------
 
+@app.get("/login")
+def login():
+    pass
 
+@app.post("/register", response_model = UserRead)
+def validate_registration_email(user: UserCreate, db: SessionDep):
+    is_email_exist = get_user(db, email = user.email)
+    if is_email_exist:
+        raise HTTPException(status_code = 400, detail = "Email is registered, use another email.")
+    new_user = create_user(db, user)
+    return new_user
 
 #------Member Routes-------
 

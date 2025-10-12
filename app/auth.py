@@ -1,5 +1,5 @@
 import jwt
-
+from passlib.context import CryptContext
 from fastapi import HTTPException, Header
 
 '''
@@ -8,6 +8,14 @@ from fastapi import HTTPException, Header
 
 SECRET = "dev-secret"
 ALGO = "HS256"
+
+pw_crypt = CryptContext(schemes=["bcrypt"], deprecated = "auto")
+
+def hash_password(password: str):
+    return pw_crypt.hash(password)
+
+def verify_password(in_password, hashed_password):
+    return pw_crypt.verify(in_password, hashed_password)
 
 def create_token(user_id: int, username: str) -> str:
     payload = {
@@ -38,3 +46,4 @@ def require_user(tcxlogin: str = Header(None, alias="tcxlogin")) -> dict:
 def require_token(tcxlogin: str | None = Header(None, alias="tcxlogin")) -> dict | None:
     # TODO
     pass
+

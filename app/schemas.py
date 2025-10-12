@@ -4,6 +4,11 @@ from typing import Optional
 
 # interface for frontend to backend
 
+class UserCreate(BaseModel):
+    name: str
+    email: str
+    password_hashed: str
+
 class UserRead(BaseModel):
     id: int
     name: str
