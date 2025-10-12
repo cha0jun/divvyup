@@ -7,9 +7,6 @@ from crud import *
 
 app = FastAPI()
 
-
-
-
 #------Member Routes-------
 
 @app.get("/groups/{group_id}/members", response_model=List[MemberRead])
