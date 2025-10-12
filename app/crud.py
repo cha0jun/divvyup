@@ -1,7 +1,7 @@
 from fastapi import HTTPException, status
-from models import Member, ExpenseGroup, User
+from models import *
 from sqlmodel import Session, select
-from schemas import UserRead, MemberUpdate, ExpenseGroupCreate, ExpenseGroupUpdate, MemberRead
+from schemas import *
 from typing import List, Optional
 from datetime import datetime
 
@@ -15,6 +15,7 @@ def get_member(db: Session, user_id: int, group_id: int)-> Member | None:
                 Member.expense_group_id == group_id
             )
         ).first()
+    
 def get_member_by_member_id(db: Session, member_id: int)-> Member | None:
     return db.exec(
             select(Member).where(
@@ -146,3 +147,190 @@ def delete_expense_group(db: Session, group_id: int) -> ExpenseGroup:
     db.commit()
     return db_group
 
+
+#-----------Audit-------------------
+def get_all_audit(db: Session, group_id: int) -> List[Audit]:
+    return db.exec(
+        select(Audit).where(Audit.expense_group_id == group_id)
+    )
+
+def create_audit(db: Session, audit:AuditRead, group_id : int) -> Audit | None:
+    new_audit = Audit(
+        change_description = audit.change_description,
+        expense_group_id = group_id,
+        created_by = audit.created_by.id,
+        created_on = audit.created_on,         
+    )
+    
+    db.add(new_audit)
+    db.commit()
+    db.refresh(new_audit)
+    return new_audit
+
+#-----------Expense-----------------
+def get_expense(db: Session, expense_id:int) -> Expense:
+    return db.exec(
+        select(Expense).where(Expense.id == expense_id).first()
+    )
+    
+def create_expense(db: Session, expense: ExpenseCreate, group_id:int) -> Expense | None:
+    new_expense = Expense(
+        expense_group_id=group_id,
+        name = expense.name,
+        amount = expense.amount,
+        payment_date = expense.payment_date,
+        payer_id = expense.payer.id, # nested object => UserRead
+        description = expense.description,
+        created_by = expense.created_by.id,
+        created_on = datetime.now(),
+        modified_by = expense.modified_by.id,
+        modified_on = datetime.now() 
+    )
+    
+    db.add(new_expense)
+    db.commit()
+    db.refresh(new_expense)
+    return new_expense
+
+def update_expense(db: Session, expense: ExpenseUpdate, expense_id: int) -> Expense | None:
+    db_expense = get_expense(db, expense_id)
+    if not db_expense:
+        raise HTTPException(status_code=404, detail="Expense not found")
+    
+    if expense.name is not None:
+        db_expense.name = expense.name
+    if expense.amount is not None:
+        db_expense.amount = expense.amount
+    if expense.payment_date is not None:
+        db_expense.payment_date = expense.payment_date
+    if expense.payer.id is not None:
+        db_expense.payer_id = expense.payer.id
+    if expense.description is not None:
+        db_expense.description = expense.description
+    
+    db_expense.modified_by = expense.modified_by.id
+    db_expense.modified_on = datetime.now()
+    
+    db.commit()
+    db.refresh(db_expense)
+    return db_expense
+
+def delete_expense(db: Session, expense_id: int) -> None:
+    db_expense = get_expense(db, expense_id)
+    if not db_expense:
+        raise HTTPException(status_code=404, detail="Expense not found")
+    
+    db.delete(db_expense)
+    db.commit()
+    return
+
+#------------- Recurring Expense---------------
+def get_recurring_expense(db: Session, expense_id:int) -> RecurringExpense:
+    return db.exec(
+        select(RecurringExpense).where(RecurringExpense.id == expense_id).first()
+    )
+
+## creation of recurring expense to be a 2 step process (expense created in db first followed by recurring), enforced in BL
+def create_recurring_expense(db: Session, expense: RecurringExpenseBase, group_id:int, expense_id:int) -> RecurringExpense | None:
+    db_expense = get_expense(db, expense_id)
+    if not db_expense:
+        raise HTTPException(status_code=404, detail="Expense not found")
+    
+    new_recurring_expense = RecurringExpense(
+        expense_id = expense_id,
+        frequency = expense.frequency,
+        start_date = expense.start_date,
+        end_date = expense.end_date,
+        created_by = expense.created_by.id,
+        created_on = datetime.now(),
+        modified_by = expense.modified_by.id,
+        modified_on = datetime.now()
+    )
+    
+    db.add(new_recurring_expense)
+    db.commit()
+    db.refresh(new_recurring_expense)
+    return new_recurring_expense
+
+def update_expense(db: Session, expense: RecurringExpenseBase, expense_id: int) -> RecurringExpense | None:
+    db_recurring_expense = get_recurring_expense(db, expense_id)
+    if not db_recurring_expense:
+        raise HTTPException(status_code=404, detail="Expense not found")
+    
+    if expense.frequency is not None:
+        db_recurring_expense.frequency = expense.frequency
+    if expense.start_date is not None:
+        db_recurring_expense.start_date = expense.start_date
+    if expense.end_date is not None:
+        db_recurring_expense.end_date = expense.end_date
+    
+    db_recurring_expense.modified_by = expense.modified_by.id
+    db_recurring_expense.modified_on = datetime.now()
+    
+    db.commit()
+    db.refresh(db_recurring_expense)
+    return db_recurring_expense
+
+def delete_recurring_expense(db: Session, expense_id: int) -> None:
+    db_expense = get_recurring_expense(db, expense_id)
+    if not db_expense:
+        raise HTTPException(status_code=404, detail="Expense not found")
+    
+    db.delete(db_expense)
+    db.commit()
+    return
+
+#--------------Breakdown---------------
+def get_breakdown(db: Session, breakdown_id:int) -> Breakdown:
+    return db.exec(
+        select(Breakdown).where(Breakdown.id == breakdown_id)
+    )
+
+def get_breakdown_by_expense_id(db: Session, expense_id:int) -> List[Breakdown]:
+    return db.exec(
+        select(Breakdown).where(Breakdown.expense_id == expense_id)
+    )
+
+def create_breakdown(db: Session, breakdown:BreakdownBase, expense_id: int, created_by: UserRead) -> Breakdown | None:
+    new_breakdown = Breakdown(
+        expense_id = expense_id,
+        amount =  breakdown.amount,
+        paid_by_id = breakdown.paid_by.id,
+        created_by = created_by.id,
+        created_on = datetime.now(),
+        modified_by = created_by.id,
+        modified_on = datetime.now()
+    )
+    
+    db.add(new_breakdown)
+    db.commit()
+    db.refresh(new_breakdown)
+    return new_breakdown
+
+def update_breakdown(db: Session, breakdown:BreakdownBase, breakdown_id:int, modified_by: UserRead) -> Breakdown:
+    db_breakdown = get_breakdown(db, breakdown_id)
+    if not db_breakdown:
+        raise HTTPException(status_code=404,detail= "Breakdown not found")
+    
+    if breakdown.amount is not None:
+        db_breakdown.amount = breakdown.amount
+    if breakdown.paid_by is not None:
+        db_breakdown.paid_by_id = breakdown.paid_by.id
+    
+    db_breakdown.modified_on = datetime.now()
+    db_breakdown.modified_by = modified_by.id
+    
+    db.commit()
+    db.refresh(db_breakdown)
+    return db_breakdown
+    
+
+def delete_breakdown(db: Session, breakdown_id: int) -> None:
+    db_breakdown = get_breakdown(db, breakdown_id)
+    if not db_breakdown:
+        raise HTTPException(status_code=404, detail="Breakdown not found")
+    
+    db.delete(db_breakdown)
+    db.commit()
+    
+    return

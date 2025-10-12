@@ -52,7 +52,8 @@ class ExpenseBase(BaseModel):
     payer: UserRead
     amount: float
     payment_date: datetime
-    modified_by: Optional[UserRead] = None
+    created_by: UserRead
+    modified_by: UserRead
     
 # might be possible to use ExpenseBase across
     
