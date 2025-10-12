@@ -1,30 +1,13 @@
 from fastapi import FastAPI, Depends, HTTPException, status
-from typing import List, Annotated
-from models import User, Member, ExpenseGroup, Expense, RecurringExpense, Audit, Breakdown
-from schemas import (
-    MemberRead, MemberCreate, MemberUpdate,
-    ExpenseGroupCreate, ExpenseGroupUpdate, ExpenseGroupRead, UserRead,
-    AuditRead, ExpenseRead, ExpenseCreate, ExpenseUpdate, RecurringExpenseBase
-)
+from typing import List
+from models import *
+from schemas import *
 from database import SessionDep
-
-from crud import (
-    get_member, get_member_by_member_id, add_member_to_group,
-    remove_member_from_group, update_member_role, get_group_members,
-    get_expense_group, create_group, update_expense_group, delete_expense_group
-)
+from crud import *
 
 app = FastAPI()
 
 
-# can consider shifting this function to services.py
-def get_user(username: str, session: SessionDep) -> User | None:
-    user = session.get(User, username)
-    if user is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    return user
-
-UserDep = Annotated[User, Depends(get_user)]
 
 
 #------Member Routes-------
@@ -83,3 +66,11 @@ def remove_member(
     
     remove_member_from_group(db, member_id=member_id, group_id=group_id)
     return None
+
+
+
+#------Expense Routes-------
+
+#------Recurring Expense Routes-------
+
+#------Breakdown Routes-------

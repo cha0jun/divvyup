@@ -1,9 +1,19 @@
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, Depends
 from models import *
 from sqlmodel import Session, select
 from schemas import *
-from typing import List, Optional
+from typing import List, Optional, Annotated
 from datetime import datetime
+from database import SessionDep
+
+#----User------
+def get_user(username: str, session: SessionDep) -> User | None:
+    user = session.get(User, username)
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
+UserDep = Annotated[User, Depends(get_user)]
 
 
 #----Member------
