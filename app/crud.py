@@ -18,10 +18,6 @@ def get_user(db: Session, email: str) -> User | None:
 UserDep = Annotated[User, Depends(get_user)]
 
 def create_user(db: Session, user: UserCreate):
-    print("==========================================================")
-    print(f"!!! TRUTH SERUM: The value being hashed is >> {user.password} <<")
-    print(f"!!! TRUTH SERUM: Its length is >> {len(user.password)} <<")
-    print("==========================================================")
     hashed_pw = hash_password(user.password)
     new_user = User(name = user.name, email = user.email, password_hash = hashed_pw)
 
@@ -196,6 +192,11 @@ def create_audit(db: Session, audit:AuditRead, group_id : int) -> Audit | None:
 def get_expense(db: Session, expense_id:int) -> Expense:
     return db.exec(
         select(Expense).where(Expense.id == expense_id).first()
+    )
+
+def get_expenses_by_group_id(db: Session, group_id:int) -> List[Expense]:
+    return db.exec(
+        select(Expense).where(Expense.group_id == group_id)
     )
     
 def create_expense(db: Session, expense: ExpenseCreate, group_id:int) -> Expense | None:

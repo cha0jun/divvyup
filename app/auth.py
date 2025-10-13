@@ -5,12 +5,6 @@ from passlib.context import CryptContext
 from fastapi import HTTPException, Header
 from datetime import datetime, timedelta, timezone
 
-# --- ADD THESE THREE LINES FOR DEBUGGING ---
-print("--- INSPECTING THE 'jwt' MODULE ---")
-print(f"File location of jwt module: {jwt.__file__}")
-print(f"Contents of jwt module: {dir(jwt)}")
-# -------------------------------------------
-
 load_dotenv()
 
 # --- Hashing ---
