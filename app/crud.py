@@ -182,6 +182,11 @@ def get_expense(db: Session, expense_id:int) -> Expense:
     return db.exec(
         select(Expense).where(Expense.id == expense_id).first()
     )
+
+def get_expenses_by_group_id(db: Session, group_id:int) -> List[Expense]:
+    return db.exec(
+        select(Expense).where(Expense.group_id == group_id)
+    )
     
 def create_expense(db: Session, expense: ExpenseCreate, group_id:int) -> Expense | None:
     new_expense = Expense(
