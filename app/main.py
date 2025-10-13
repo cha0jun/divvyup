@@ -189,7 +189,44 @@ def delete_group(
     return None
 
 #------Expense Routes-------
+@app.get("/groups/{group_id}/expenses", response_model=List[ExpenseRead])
+def get_expenses(group_id:int):
+    pass
+
+@app.get("/groups/{group_id}/expenses/{expense_id}", response_model=ExpenseRead)
+def get_expense_by_id(group_id:int, expense_id:int):
+    pass
+
+@app.post("/groups/{group_id}/expenses", response_model=ExpenseCreate)
+def create_expense(group_id:int):
+    pass
+
+@app.put("/groups/{group_id}/expenses/{expense_id}", response_model=ExpenseUpdate)
+def update_expense(group_id:int, expense_id:int):
+    pass
+
+@app.delete("/groups/{group_id}/expenses/{expense_id}",response_model = ExpenseBase)
+def delete_expense{group_id:int, expense_id:int):
+    pass                   
 
 #------Recurring Expense Routes-------
+@app.get("/groups/{group_id}/expenses/{expense_id}/recurring", response_model = RecurringExpense)
+def get_recurring_expense(group_id:int, expense_id:int):
+    pass
 
-#------Breakdown Routes-------
+@app.post("/groups/{group_id}/expenses/{expense_id}/recurring", response_model = RecurringExpense)
+def create_recurring_expense(group_id:int, expense_id:int):
+    pass
+
+@app.put("/groups/{group_id}/expenses/{expense_id}/recurring", response_model = RecurringExpense)
+def update_recurring_expense(group_id:int, expense_id:int):
+    pass
+
+@app.delete("/groups/{group_id}/expenses/{expense_id}/recurring", response_model = RecurringExpense)
+def delete_recurring_expense(group_id:int, expense_id:int):
+    pass
+
+#------Audit Routes-------
+@app.get("/groups/{group_id}/audits", response_model = List[AuditRead])
+def get_audits(group_id:int):
+    pass
