@@ -12,14 +12,18 @@ def get_user(db: Session, email: str) -> User | None:
     query = select(User).where(User.email == email)
     user = db.exec(query).first()
     if user is None:
-        raise HTTPException(status_code=404, detail= "User not found")
+        False
     return user
 # handles user    between app and db
 UserDep = Annotated[User, Depends(get_user)]
 
 def create_user(db: Session, user: UserCreate):
+    print("==========================================================")
+    print(f"!!! TRUTH SERUM: The value being hashed is >> {user.password} <<")
+    print(f"!!! TRUTH SERUM: Its length is >> {len(user.password)} <<")
+    print("==========================================================")
     hashed_pw = hash_password(user.password)
-    new_user = User(name = user.name, email = user.email, password_hashed = hashed_pw)
+    new_user = User(name = user.name, email = user.email, password_hash = hashed_pw)
 
     db.add(new_user)
     db.commit()

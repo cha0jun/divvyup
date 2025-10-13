@@ -1,14 +1,19 @@
 import jwt
+import os
+from dotenv import load_dotenv
 from passlib.context import CryptContext
 from fastapi import HTTPException, Header
+from datetime import datetime, timedelta, timezone
 
-'''
-@may @sirhan this is the auth login from test 3, i paste it here for now, we can enhance for our app if required
-'''
+# --- ADD THESE THREE LINES FOR DEBUGGING ---
+print("--- INSPECTING THE 'jwt' MODULE ---")
+print(f"File location of jwt module: {jwt.__file__}")
+print(f"Contents of jwt module: {dir(jwt)}")
+# -------------------------------------------
 
-SECRET = "dev-secret"
-ALGO = "HS256"
+load_dotenv()
 
+# --- Hashing ---
 pw_crypt = CryptContext(schemes=["bcrypt"], deprecated = "auto")
 
 def hash_password(password: str):
@@ -17,10 +22,18 @@ def hash_password(password: str):
 def verify_password(in_password, hashed_password):
     return pw_crypt.verify(in_password, hashed_password)
 
-def create_token(user_id: int, username: str) -> str:
+# --- JWT Token ---
+
+SECRET = os.getenv("SECRET_KEY")
+ALGO = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30 
+
+def create_token(user_id: int, email: str) -> str:
+    exp = datetime.now(timezone.utc) + timedelta(minutes = ACCESS_TOKEN_EXPIRE_MINUTES)
     payload = {
         "sub": str(user_id),
-        "username": username,
+        "email": email,
+        "exp": exp, 
     }
     return jwt.encode(payload, SECRET, algorithm=ALGO)
 
@@ -28,11 +41,8 @@ def decode_token(token: str) -> dict:
     return jwt.decode(token, SECRET, algorithms=[ALGO])
 
 def verify_credentials(username: str, password: str) -> dict:
-    user = get_user(username)
-    if user and user.password == password:
-        return user
-    return None
-    
+    pass
+
 # This is mandatory token
 # If missing token header, return 401
 # Decode token, if Error, return 401
