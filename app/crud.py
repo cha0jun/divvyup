@@ -182,6 +182,11 @@ def get_expense(db: Session, expense_id:int) -> Expense:
     return db.exec(
         select(Expense).where(Expense.id == expense_id).first()
     )
+
+def get_expenses_by_group_id(db: Session, group_id:int) -> List[Expense]:
+    return db.exec(
+        select(Expense).where(Expense.group_id == group_id)
+    )
     
 def get_expense_by_group_id(db: Session, group_id:int) -> List[Expense]:
     return db.exec(
@@ -267,7 +272,7 @@ def create_recurring_expense(db: Session, expense: RecurringExpenseBase, group_i
     db.refresh(new_recurring_expense)
     return new_recurring_expense
 
-def update_expense(db: Session, expense: RecurringExpenseBase, expense_id: int) -> RecurringExpense | None:
+def update_recurring_expense(db: Session, expense: RecurringExpenseBase, expense_id: int) -> RecurringExpense | None:
     db_recurring_expense = get_recurring_expense(db, expense_id)
     if not db_recurring_expense:
         raise HTTPException(status_code=404, detail="Expense not found")
