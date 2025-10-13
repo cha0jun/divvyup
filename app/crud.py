@@ -1,20 +1,31 @@
 from fastapi import HTTPException, status, Depends
-from models import *
+from .models import *
 from sqlmodel import Session, select
-from schemas import *
+from .schemas import *
 from typing import List, Optional, Annotated
 from datetime import datetime
-from database import SessionDep
+from .database import SessionDep
+from .auth import *
 
 #----User------
-def get_user(username: str, session: SessionDep) -> User | None:
-    user = session.get(User, username)
+def get_user(db: Session, email: str) -> User | None:
+    query = select(User).where(User.email == email)
+    user = db.exec(query).first()
     if user is None:
-        raise HTTPException(status_code=404, detail="User not found")
+        False
     return user
-
+# handles user    between app and db
 UserDep = Annotated[User, Depends(get_user)]
 
+def create_user(db: Session, user: UserCreate):
+    hashed_pw = hash_password(user.password)
+    new_user = User(name = user.name, email = user.email, password_hash = hashed_pw)
+
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    return new_user
 
 #----Member------
 

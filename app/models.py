@@ -4,6 +4,12 @@ from datetime import datetime
 
 # interface for business logic to db
 
+class Token(SQLModel, table=True):
+    __tablename__ = "token"
+
+    access_token: str = Field(default=None, primary_key=True)
+    token_type: str = "bearer"
+
 class User(SQLModel, table=True):
     __tablename__ = "user"
 
