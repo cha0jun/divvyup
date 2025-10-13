@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException, Depends, Body, status
-from database import Session
-from crud import get_expense_group, get_member
+from .database import Session
+from .crud import get_expense_group, get_member
 
 def validate_expense_group(db: Session, group_id:int, error_detail: str | None) -> None:
     db_group = get_expense_group(db, group_id)

@@ -2,11 +2,11 @@ import logging
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from typing import List
-from models import *
-from schemas import *
-from database import SessionDep
-from crud import *
-from services import validate_expense_group, validate_group_member, validate_group_admin
+from .models import *
+from .schemas import *
+from .database import SessionDep
+from .crud import *
+from .services import validate_expense_group, validate_group_member, validate_group_admin
 
 app = FastAPI()
 
@@ -47,7 +47,7 @@ def validate_registration_email(db: SessionDep, user: UserCreate):
 
 #------Member Routes-------
 
-'''@app.get("/groups/{group_id}/members", response_model=List[MemberRead])
+@app.get("/groups/{group_id}/members", response_model=List[MemberRead])
 def read_group_members(
     group_id: int,
     db: SessionDep,
@@ -64,9 +64,9 @@ def read_group_members(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You are not a member of this group"
         )
-    return get_group_members(db, group_id=group_id)'''
+    return get_group_members(db, group_id=group_id)
 
-'''@app.patch("/groups/{group_id}/members/{member_id}", response_model=MemberRead)
+@app.patch("/groups/{group_id}/members/{member_id}", response_model=MemberRead)
 @app.post("/groups/{group_id}/members", response_model=MemberRead, status_code=status.HTTP_201_CREATED)
 def add_member(
     group_id: int,
@@ -123,9 +123,9 @@ def update_member(
         member_update=member_update
     )
 
-    return updated_member'''
+    return updated_member
     
-'''@app.delete("/groups/{group_id}/members/{member_id}", status_code=status.HTTP_204_NO_CONTENT)
+@app.delete("/groups/{group_id}/members/{member_id}", status_code=status.HTTP_204_NO_CONTENT)
 def remove_member(
     group_id: int,
     member_id: int,
@@ -147,7 +147,7 @@ def remove_member(
         )
     
     remove_member_from_group(db, member_id=member_id, group_id=group_id)
-    return None'''
+    return None
 
 #------Group Routes--------
 
