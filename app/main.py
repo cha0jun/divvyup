@@ -251,7 +251,7 @@ def delete_expense_bl(group_id:int, expense_id:int, current_user: User, db: Sess
     create_audit(
         db,
         AuditRead(
-            change_description= f'Expense {expense_id} updated by {expense.created_by.name}.',
+            change_description= f'Expense {expense.name} deleted by {expense.created_by.name}.',
             expense_group_id = group_id,
             created_by= current_user.id,
             created_on= datetime.now()
@@ -280,7 +280,7 @@ def create_recurring_expense_bl(group_id:int, expense_id:int, recurring_expense:
     create_audit(
         db,
         AuditRead(
-            change_description= f'Recurring {recurring_expense.name} created by {recurring_expense.created_by.name}.',
+            change_description= f'Recurring expense {recurring_expense.name} created by {recurring_expense.created_by.name}.',
             expense_group_id = group_id,
             created_by= current_user.id,
             created_on= datetime.now()
@@ -301,7 +301,7 @@ def update_recurring_expense_bl(group_id:int, expense_id:int, current_user:User,
     create_audit(
         db,
         AuditRead(
-            change_description= f'Recurring {recurring_expense.name} updated by {recurring_expense.created_by.name}.',
+            change_description= f'Recurring expense {recurring_expense.name} updated by {recurring_expense.created_by.name}.',
             expense_group_id = group_id,
             created_by= current_user.id,
             created_on= datetime.now()
@@ -323,7 +323,7 @@ def delete_recurring_expense_bl(group_id:int, expense_id:int, current_user:User,
     create_audit(
         db,
         AuditRead(
-            change_description= f'Recurring {re.name} updated by {re.created_by.name}.',
+            change_description= f'Recurring expense {re.name} deleted by {re.created_by.name}.',
             expense_group_id = group_id,
             created_by= current_user.id,
             created_on= datetime.now()
