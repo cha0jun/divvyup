@@ -67,6 +67,12 @@ def remove_member(
 
 
 #------Expense Routes-------
+#get, put, patch, delete
+
+@app.get("/group/{group_id}/expenses", response_model=List[ExpenseBase])
+def get_expense():
+    pass
+
 
 #------Recurring Expense Routes-------
 
