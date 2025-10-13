@@ -190,8 +190,15 @@ def delete_group(
 
 #------Expense Routes-------
 @app.get("/groups/{group_id}/expenses", response_model=List[ExpenseRead])
-def get_expenses(group_id:int):
-    pass
+def get_expenses(group_id:int, current_user: User = Depends(get_user):
+    db_group = get_expense_group(db, group_id)
+    if not db_group:
+        raise HttpException(status_code=404, detail= "Expense group not found")
+    db_member = get_member(db, current_user.id, group_id)
+    if not db_member:
+        raise HttpException(status_code=status.HTTP_403_FORBIDDEN, detail="Only group members can fetch expenses")
+
+    return get_expenses_by_group_id(db, group_id)
 
 @app.get("/groups/{group_id}/expenses/{expense_id}", response_model=ExpenseRead)
 def get_expense_by_id(group_id:int, expense_id:int):
@@ -228,5 +235,13 @@ def delete_recurring_expense(group_id:int, expense_id:int):
 
 #------Audit Routes-------
 @app.get("/groups/{group_id}/audits", response_model = List[AuditRead])
-def get_audits(group_id:int):
-    pass
+def get_audits(group_id:int, db: SessionDep, current_user: User = Depends(get_user)):
+    db_group = get_expense_group(db, group_id)
+    if not db_group:
+        raise HttpException(status_code=404, detail= "Expense group not found")
+
+    if db_group.admin_id != current_user.id:
+        raise HttpException(status_code=status.HTTP_403_FORBIDDEN, detail="Only the group admin can view the audit trail")
+
+    return get_all_audit(db, group_id)
+    
