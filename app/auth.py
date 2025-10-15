@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 from fastapi import HTTPException, Header, Depends, status
 from datetime import datetime, timedelta, timezone
 from jose import JWTError, jwt
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials 
 from typing import Annotated
 
 from .crud import get_user_by_email 
@@ -46,13 +46,14 @@ def authenticate_user(db: SessionDep, email: str, password: str) -> User:
         raise HTTPException(status_code=401, detail="Invalid credentials")
     return user
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
-def get_current_user(db: SessionDep, token: str = Depends(oauth2_scheme) ):
+http_bearer_scheme = HTTPBearer()
+def get_current_user(db: SessionDep, credentials: HTTPAuthorizationCredentials = Depends(http_bearer_scheme) ):
 
     """
     Dependency to verify JWT token and return the current authenticated user.
     Raises HTTP 401 if token is invalid or expired.
     """
+    token = credentials.credentials
     try:
         payload = decode_token(token)
         user_id: str = payload.get("sub")
