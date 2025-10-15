@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 from typing import Optional, List, Dict
 
@@ -13,6 +13,9 @@ class UserRead(BaseModel):
     id: int
     name: str
     email: str
+    
+    #model_config to allow this schema to be created from a database object.
+    model_config = ConfigDict(from_attributes=True)
 
 class MemberCreate(BaseModel):
     user_id: int  
@@ -26,7 +29,9 @@ class MemberRead(BaseModel):
     id: int
     is_admin: bool
     user: UserRead # Show who the member is
-    created_on: datetime
+    added_on: datetime
+
+    model_config = ConfigDict(from_attributes=True)
 
 class ExpenseGroupBase(BaseModel):
     name: str
@@ -46,10 +51,14 @@ class ExpenseGroupRead(ExpenseGroupBase):
     modified_on: Optional[datetime] = None
     modified_by: Optional[UserRead] = None
     
+    model_config = ConfigDict(from_attributes=True)
+
 class AuditRead(BaseModel):
     change_description: str
     created_by: UserRead
     created_on: datetime
+
+    model_config = ConfigDict(from_attributes=True)
 
 class ExpenseBase(BaseModel):
     name: str
@@ -63,24 +72,39 @@ class ExpenseBase(BaseModel):
 # might be possible to use ExpenseBase across
     
 class ExpenseRead(ExpenseBase):
-    pass
+    id: int
+    payer: UserRead
+    created_by: UserRead
+    modified_by: UserRead
+
+    model_config = ConfigDict(from_attributes=True)
 
 class ExpenseCreate(ExpenseBase):
-    pass
+    payer_id: int
+#When creating an expense, the client should only send the ID of the payer.
+## The `created_by` and `modified_by` will be set by the server from the current user.
 
 class ExpenseUpdate(ExpenseBase):
-    pass
+    name: Optional[str] = None
+    description: Optional[str] = None
+    amount: Optional[float] = None
+    payment_date: Optional[datetime] = None
+    payer_id: Optional[int] = None
+
+#For updates, all fields should be optional.
 
 class RecurringExpenseBase(ExpenseBase):
     frequency: str
     start_date: datetime
-    end_date: datetime
+    end_date: Optional[datetime] = None
 
 ## to create delete when nesscessary
 
 class BreakdownBase(BaseModel):
     amount: float
-    paid_by: UserRead
+    debtor_id: int
+    #Changed from 'paid_by: UserRead' to 'debtor_id: int'. 
+    ## The client should send the ID of the user who owes money.
     
     
 class UserBalance(BaseModel):

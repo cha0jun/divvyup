@@ -231,21 +231,21 @@ def delete_group(
 
 #------Expense Routes-------
 @app.get("/groups/{group_id}/expenses", response_model=List[ExpenseRead])
-def get_expenses_bl(group_id:int, current_user: UserDep, db: Session = SessionDep):
+def get_expenses_bl(group_id:int,  db: SessionDep, current_user: UserDep):
     validate_expense_group(db, group_id, "Expense group not found.")
     validate_group_member(db, current_user.id, group_id, "Only members can view group expenses")
     
     return get_expenses_by_group_id(db, group_id)
 
 @app.get("/groups/{group_id}/expenses/{expense_id}", response_model=ExpenseRead)
-def get_expense_by_id_bl(group_id:int, expense_id:int, current_user: User, db: Session = SessionDep,):
+def get_expense_by_id_bl(group_id:int, expense_id:int, db: SessionDep, current_user: UserDep):
     validate_expense_group(db, group_id, "Expense group not found.")
     validate_group_member(db, current_user.id, group_id, "Only members can view group expenses")
     
     return get_expense(db,expense_id)
 
 @app.post("/groups/{group_id}/expenses", response_model=ExpenseCreate)
-def create_expense_bl(group_id:int, expense:ExpenseCreate, current_user:User = UserDep, db: Session = SessionDep):
+def create_expense_bl(group_id:int, expense:ExpenseCreate, db: SessionDep, current_user: UserDep):
     validate_expense_group(db, group_id, "Expense group not found.")
     validate_group_member(db, current_user.id, group_id, "Only members can add group expenses")
     
@@ -263,7 +263,7 @@ def create_expense_bl(group_id:int, expense:ExpenseCreate, current_user:User = U
     return created_expense 
 
 @app.put("/groups/{group_id}/expenses/{expense_id}", response_model=ExpenseUpdate)
-def update_expense_bl(group_id:int, expense_id:int, expense: ExpenseUpdate, current_user: User = UserDep, db: Session = SessionDep):
+def update_expense_bl(group_id:int, expense_id:int, expense: ExpenseUpdate, db: SessionDep, current_user: UserDep):
     validate_expense_group(db, group_id, "Expense group not found.")
     validate_group_member(db, current_user.id, group_id, "Only members can update group expenses")
     
@@ -281,7 +281,7 @@ def update_expense_bl(group_id:int, expense_id:int, expense: ExpenseUpdate, curr
     return updated_expense
 
 @app.delete("/groups/{group_id}/expenses/{expense_id}",response_model = ExpenseBase)
-def delete_expense_bl(group_id:int, expense_id:int, current_user: User = UserDep, db: Session = SessionDep):
+def delete_expense_bl(group_id:int, expense_id:int, db: SessionDep, current_user: UserDep):
     validate_expense_group(db, group_id, "Expense group not found.")
     validate_group_member(db, current_user.id, group_id, "Only members can delete group expenses")
     
@@ -304,14 +304,14 @@ def delete_expense_bl(group_id:int, expense_id:int, current_user: User = UserDep
 
 #------Recurring Expense Routes-------
 @app.get("/groups/{group_id}/expenses/{expense_id}/recurring", response_model = RecurringExpense)
-def get_recurring_expense_bl(group_id:int, expense_id:int, current_user:User = UserDep, db: Session = SessionDep):
+def get_recurring_expense_bl(group_id:int, expense_id:int, db: SessionDep, current_user: UserDep):
     validate_expense_group(db, group_id, "Expense group not found.")
     validate_group_member(db, current_user.id, group_id, "Only members can view recurring expenses")
     
     return get_recurring_expense(db, expense_id)
 
 @app.post("/groups/{group_id}/expenses/{expense_id}/recurring", response_model = RecurringExpense)
-def create_recurring_expense_bl(group_id:int, expense_id:int, recurring_expense: RecurringExpenseBase ,current_user:User= UserDep, db: Session = SessionDep):
+def create_recurring_expense_bl(group_id:int, expense_id:int, recurring_expense: RecurringExpenseBase , db: SessionDep, current_user: UserDep):
     validate_expense_group(db, group_id, "Expense group not found.")
     validate_group_member(db, current_user.id, group_id, "Only members can add a recurring expense")
     
@@ -332,7 +332,7 @@ def create_recurring_expense_bl(group_id:int, expense_id:int, recurring_expense:
     
 
 @app.put("/groups/{group_id}/expenses/{expense_id}/recurring", response_model = RecurringExpense)
-def update_recurring_expense_bl(group_id:int, expense_id:int, recurring_expense: RecurringExpenseBase, current_user:User = UserDep, db: Session = SessionDep):
+def update_recurring_expense_bl(group_id:int, expense_id:int, recurring_expense: RecurringExpenseBase, db: SessionDep, current_user: UserDep):
     validate_expense_group(db, group_id, "Expense group not found.")
     validate_group_member(db, current_user.id, group_id, "Only members can updated a recurring expense")
     
@@ -352,7 +352,7 @@ def update_recurring_expense_bl(group_id:int, expense_id:int, recurring_expense:
     
 
 @app.delete("/groups/{group_id}/expenses/{expense_id}/recurring", response_model = RecurringExpense)
-def delete_recurring_expense_bl(group_id:int, expense_id:int, current_user:User= UserDep, db: Session = SessionDep):
+def delete_recurring_expense_bl(group_id:int, expense_id:int, db: SessionDep, current_user: UserDep):
     validate_expense_group(db, group_id, "Expense group not found.")
     validate_group_member(db, current_user.id, group_id, "Only members can delete a recurring expense")
     
@@ -375,7 +375,7 @@ def delete_recurring_expense_bl(group_id:int, expense_id:int, current_user:User=
 
 #------Audit Routes-------
 @app.get("/groups/{group_id}/audits", response_model = List[AuditRead])
-def get_audits_bl(group_id:int, db: SessionDep, current_user: User = UserDep):
+def get_audits_bl(group_id:int, db: SessionDep, current_user: UserDep):
     validate_expense_group(db, group_id, "Expense group not found")
     validate_group_admin(db, current_user.id, group_id, "Only the group admin can view the audit trail")
     return get_all_audit(db, group_id)
@@ -383,7 +383,7 @@ def get_audits_bl(group_id:int, db: SessionDep, current_user: User = UserDep):
 #------Balance Summary Route-------
 
 @app.get("/groups/{group_id}/balances", response_model = GroupBalanceResponse)
-def get_group_balances(group_id: int, db: SessionDep,current_user: User = UserDep):
+def get_group_balances(group_id: int, db: SessionDep, current_user: UserDep):
     validate_expense_group(db, group_id, error_detail="Expense group not found")
     group = get_expense_group(db, group_id)
     group_balances = calculate_group_balances(group)
