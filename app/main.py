@@ -7,6 +7,7 @@ from .schemas import *
 from .database import SessionDep
 from .crud import *
 from .services import validate_expense_group, validate_group_member, validate_group_admin
+from .auth import*
 
 app = FastAPI()
 
@@ -15,7 +16,7 @@ app = FastAPI()
 @app.post("/token", response_model = Token)
 def login(db: SessionDep, login_form: OAuth2PasswordRequestForm = Depends()):
     print("hello")
-    user = get_user(db, email = login_form.username)
+    user = get_user_by_email(db, email = login_form.username)
     print(user)
     if not user or verify_password(login_form.password, user.password_hash):
         # Log the failure reason
@@ -36,8 +37,9 @@ def login(db: SessionDep, login_form: OAuth2PasswordRequestForm = Depends()):
     }
 
 @app.post("/register", response_model = UserRead)
-def validate_registration_email(db: SessionDep, user: UserCreate):
-    is_email_exist = get_user(db, email = user.email)
+def register_new_user(db: SessionDep, user: UserCreate):
+    "Register a new user "
+    is_email_exist = get_user_by_email(db, email = user.email)
     if is_email_exist:
         raise HTTPException(
             status_code = 400, 
@@ -72,7 +74,7 @@ def add_member(
     group_id: int,
     member_create: MemberCreate, 
     db: SessionDep,
-    current_user: User = Depends(get_user)
+    current_user: UserDep
 ):
     
     """
@@ -102,7 +104,7 @@ def update_member(
     member_id: int,
     member_update: MemberUpdate,
     db: SessionDep,
-    current_user: User = Depends(get_user)):
+    current_user: UserDep):
 
     """
     Update a member's role within a group (promote to admin).
@@ -130,7 +132,7 @@ def remove_member(
     group_id: int,
     member_id: int,
     db:SessionDep,
-    current_user: User = Depends(get_user)
+    current_user: UserDep
 ):
     
     """
@@ -151,12 +153,12 @@ def remove_member(
 
 #------Group Routes--------
 
-@app.post("/groups", response_model=MemberRead, status_code=status.HTTP_201_CREATED)
+@app.post("/groups", response_model= ExpenseGroupRead, status_code=status.HTTP_201_CREATED)
 def create_expense_group(
     group: ExpenseGroupCreate,
-    db: Session = SessionDep,
-    current_user: User = Depends(get_user)
-):
+    db: SessionDep,
+    current_user: UserDep
+    ):
     
     """
     Create a new expense group.
@@ -169,7 +171,7 @@ def create_expense_group(
 def read_expense_group(
     group_id: int,
     db: SessionDep,
-    current_user: User = Depends(get_user)
+    current_user: UserDep
 ):
     """
     Retrieve details of a specific expense group.
@@ -185,7 +187,7 @@ def update_group_details(
     group_id: int,
     group_update: ExpenseGroupUpdate,
     db: SessionDep,
-    current_user: User = Depends(get_user)
+    current_user: UserDep
 ):
     """
     Update an expense group's name or description.
@@ -208,7 +210,7 @@ def update_group_details(
 def delete_group(
     group_id: int,
     db: SessionDep,
-    current_user: User = Depends(get_user)
+    current_user: UserDep
 ):
     """
     Delete an expense group.
@@ -229,7 +231,7 @@ def delete_group(
 
 #------Expense Routes-------
 @app.get("/groups/{group_id}/expenses", response_model=List[ExpenseRead])
-def get_expenses_bl(group_id:int, current_user: User = Depends(get_user), db: Session = SessionDep):
+def get_expenses_bl(group_id:int, current_user: UserDep, db: Session = SessionDep):
     validate_expense_group(db, group_id, "Expense group not found.")
     validate_group_member(db, current_user.id, group_id, "Only members can view group expenses")
     

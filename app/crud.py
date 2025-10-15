@@ -5,20 +5,21 @@ from .schemas import *
 from typing import List, Optional, Annotated
 from datetime import datetime
 from .database import SessionDep
-from .auth import *
+from .security import hash_password, verify_password
 from collections import defaultdict
 
 #----User------
-def get_user(db: Session, email: str) -> User | None:
+def get_user_by_email(db: Session, email: str) -> User | None:
     query = select(User).where(User.email == email)
     user = db.exec(query).first()
-    if user is None:
-        False
     return user
 # handles user    between app and db
-UserDep = Annotated[User, Depends(get_user)]
+
 
 def create_user(db: Session, user: UserCreate):
+    if get_user_by_email(db, user.email):
+        raise HTTPException(status_code=400, detail="Email already registered")
+
     hashed_pw = hash_password(user.password)
     new_user = User(name = user.name, email = user.email, password_hash = hashed_pw)
 
