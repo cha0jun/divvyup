@@ -4,6 +4,10 @@ from typing import Optional, List, Dict
 
 # interface for frontend to backend
 
+class Token(BaseModel):
+    access_token: str 
+    token_type: str = "bearer"
+
 class UserCreate(BaseModel):
     name: str
     email: str
@@ -13,6 +17,11 @@ class UserRead(BaseModel):
     id: int
     name: str
     email: str
+
+class UserLogin(BaseModel):
+    email: str
+    password: str
+    
 
 class MemberCreate(BaseModel):
     user_id: int  
