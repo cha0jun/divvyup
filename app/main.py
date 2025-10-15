@@ -378,3 +378,12 @@ def get_audits_bl(group_id:int, db: SessionDep, current_user: User = UserDep):
     validate_group_admin(db, current_user.id, group_id, "Only the group admin can view the audit trail")
     return get_all_audit(db, group_id)
     
+#------Balance Summary Route-------
+
+@app.get("/groups/{group_id}/balances", response_model = GroupBalanceResponse)
+def get_group_balances(group_id: int, db: SessionDep,current_user: User = UserDep):
+    validate_expense_group(db, group_id, error_detail="Expense group not found")
+    group = get_expense_group(db, group_id)
+    group_balances = calculate_group_balances(group)
+
+    return group_balances

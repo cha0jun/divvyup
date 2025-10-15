@@ -6,6 +6,7 @@ from typing import List, Optional, Annotated
 from datetime import datetime
 from .database import SessionDep
 from .auth import *
+from collections import defaultdict
 
 #----User------
 def get_user(db: Session, email: str) -> User | None:
@@ -326,7 +327,7 @@ def create_breakdown(db: Session, breakdown:BreakdownBase, expense_id: int, crea
     new_breakdown = Breakdown(
         expense_id = expense_id,
         amount =  breakdown.amount,
-        paid_by_id = breakdown.paid_by.id,
+        debtor_id = breakdown.debtor_id,
         created_by = created_by.id,
         created_on = datetime.now(),
         modified_by = created_by.id,
@@ -345,8 +346,8 @@ def update_breakdown(db: Session, breakdown:BreakdownBase, breakdown_id:int, mod
     
     if breakdown.amount is not None:
         db_breakdown.amount = breakdown.amount
-    if breakdown.paid_by is not None:
-        db_breakdown.paid_by_id = breakdown.paid_by.id
+    if breakdown.debtor_id is not None:
+        db_breakdown.debtor_id = breakdown.debtor_id
     
     db_breakdown.modified_on = datetime.now()
     db_breakdown.modified_by = modified_by.id
@@ -365,3 +366,90 @@ def delete_breakdown(db: Session, breakdown_id: int) -> None:
     db.commit()
     
     return
+
+#--------------Balance Calculation---------------
+
+def calculate_group_balances(group: ExpenseGroup) -> GroupBalanceResponse:
+    
+    #agrregate all debts
+    raw_debts = {}
+    for expense in group.expenses:
+        payer_id = expense.payer_id
+        for split in expense.breakdowns:
+            debtor_id = split.debtor_id
+            if payer_id != debtor_id:
+                key = (debtor_id, payer_id)
+                raw_debts[key] = raw_debts.get(key, 0.0) + split.amount
+
+    #offset mutual debts
+    final_balances = {} #{(debtor_id, payer_id):  amount}
+    member_ids = [m.user_id for m in group.members]
+    for i, memberA_id in enumerate(member_ids):
+        for memberB_id in member_ids[i+1:]:
+            debt_AowesB = raw_debts.get((memberA_id, memberB_id), 0)
+            debt_BowesA = raw_debts.get((memberB_id, memberA_id), 0)
+
+            if not (debt_AowesB or debt_BowesA):
+                continue
+
+            mutual_debt = min( debt_AowesB, debt_BowesA)
+            if mutual_debt > 0:
+                debt_AowesB -= mutual_debt
+                debt_BowesA -= mutual_debt
+            
+            if debt_AowesB >0 :
+                final_balances[(memberA_id, memberB_id)] = round(debt_AowesB, 2)
+
+            if debt_BowesA > 0:
+                final_balances[(memberB_id, memberA_id)] = round(debt_BowesA, 2)
+
+    
+    #build UserBalance objects for each member
+ 
+    member_names = {m.user_id: m.user.name for m in group.members}
+
+    debts_by_debtor = defaultdict(dict)    # {debtor_id: {creditor_id: amount}}
+    debts_by_creditor = defaultdict(dict)  # {creditor_id: {debtor_id: amount}}
+    for (debtor_id, creditor_id), amount in final_balances.items():
+        debts_by_debtor[debtor_id][creditor_id] = amount
+        debts_by_creditor[creditor_id][debtor_id] = amount
+
+    user_balances = {}
+
+    for member in group.members:
+        member_id = member.user_id
+        member_name = member.user.name
+        
+         # Find debts this member owes
+        owes = {} # {creditor_name: amount}
+        if member_id in debts_by_debtor:
+            for creditor_id, amount in debts_by_debtor[member_id].items():
+                creditor_name = member_names.get(creditor_id)
+                if creditor_name:
+                    owes[creditor_name] = round(amount, 2)
+
+                
+        # Find debts owed to this member
+        owed_by = {}  # {debtor_name: amount}
+        if member_id in debts_by_creditor:
+            for debtor_id, amount in debts_by_creditor[member_id].items():
+                debtor_name = member_names.get(debtor_id)
+                if debtor_name:
+                    owed_by[debtor_name] = round(amount, 2)
+    
+        
+        #calculate net balance
+        total_owed = sum(owes.values())
+        total_receivable = sum(owed_by.values())
+        net_balance = total_receivable - total_owed
+        
+        user_balances[member_name] = UserBalance(
+            owes=owes,
+            owed_by=owed_by,
+            net_balance=round(net_balance, 2)
+        )
+    
+    return GroupBalanceResponse(balances=user_balances)
+
+    
+

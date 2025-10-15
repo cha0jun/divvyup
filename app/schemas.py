@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List, Dict
 
 # interface for frontend to backend
 
@@ -83,3 +83,10 @@ class BreakdownBase(BaseModel):
     paid_by: UserRead
     
     
+class UserBalance(BaseModel):
+    owes: Dict[str, float] = {}
+    owed_by: Dict[str, float] = {}
+    net_balance: float = 0.0
+
+class GroupBalanceResponse(BaseModel):
+    balances: Dict[str, UserBalance]
