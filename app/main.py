@@ -1,6 +1,5 @@
 import logging
 from fastapi import FastAPI, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm
 from typing import List
 from .models import *
 from .schemas import *
@@ -14,15 +13,14 @@ app = FastAPI()
 #------User Routes-------
 
 @app.post("/token", response_model = Token)
-def login(db: SessionDep, login_form: OAuth2PasswordRequestForm = Depends()):
-    print("hello")
-    user = get_user_by_email(db, email = login_form.username)
+def login(db: SessionDep, login_data: UserLogin):
+    user = get_user_by_email(db, email = login_data.email)
     print(user)
-    if not user or verify_password(login_form.password, user.password_hash):
+    if not user or verify_password(login_data.password, user.password_hash):
         # Log the failure reason
         logging.warning("--- Password verification failed! ---")
         if user:
-            logging.warning(f"--- Password from form: {login_form.password} ---")
+            logging.warning(f"--- Password from form: {login_data.password} ---")
             logging.warning(f"--- Hashed password from DB: {user.password_hash} ---")
             print("verification failed")
             raise HTTPException(
