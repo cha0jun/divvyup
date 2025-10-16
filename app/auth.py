@@ -6,7 +6,7 @@ from jose import JWTError, jwt
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials 
 from typing import Annotated
 
-from .crud import get_user_by_email 
+from .crud import get_user_by_email
 from .database import SessionDep
 from .models import User
 from .security import verify_password
@@ -47,6 +47,7 @@ def authenticate_user(db: SessionDep, email: str, password: str) -> User:
     return user
 
 http_bearer_scheme = HTTPBearer()
+
 def get_current_user(db: SessionDep, credentials: HTTPAuthorizationCredentials = Depends(http_bearer_scheme) ):
 
     """
@@ -75,6 +76,7 @@ def get_current_user(db: SessionDep, credentials: HTTPAuthorizationCredentials =
             detail="User not found",
         )
     return user
+
 
 
 UserDep = Annotated[User, Depends(get_current_user)]

@@ -54,7 +54,7 @@ CREATE TABLE member (
     id INTEGER PRIMARY KEY,
     user_id INTEGER NOT NULL,
     expense_group_id INTEGER NOT NULL,
-    added_by INTEGER NOT NULL,
+    added_by INTEGER,
     added_on TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     FOREIGN KEY(user_id) REFERENCES "user"(id) ON DELETE CASCADE,

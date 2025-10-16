@@ -91,10 +91,10 @@ class RecurringExpense(SQLModel, table=True):
     __tablename__ = "recurring_expense"
     
     expense_id: int = Field(primary_key=True, foreign_key="expense.id")
-    frequency: str 
+    frequency: str = Field(nullable=False)
     start_date: datetime = Field(default_factory=datetime.now)
     #@Matthew end_date field should be Optional[datetime] = None to allow for expenses that run indefintely. -May
-    end_date: datetime = Field(default_factory=datetime.now)
+    end_date: Optional[datetime] = None
     created_by: int = Field(foreign_key="user.id")
     created_on: datetime = Field(default_factory=datetime.now)
     modified_by: int = Field(foreign_key="user.id")

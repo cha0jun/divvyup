@@ -8,10 +8,16 @@ from .security import hash_password
 from collections import defaultdict
 
 #----User------
+def get_user_by_id(db: Session, id: int) -> User | None:
+    return db.exec(select(User).where(User.id == id)).first()
+    
+
 def get_user_by_email(db: Session, email: str) -> User | None:
     query = select(User).where(User.email == email)
     user = db.exec(query).first()
     return user
+
+
 # handles user    between app and db
 
 
@@ -54,7 +60,7 @@ def add_member_to_group(db: Session, group_id: int, user_to_add: User, performin
     new_member = Member(
                 user_id=user_to_add.id,
                 expense_group_id=group_id,
-                is_admin=False, # New members are not admins by default
+               # is_admin=False, # New members are not admins by default
                 added_by=performing_admin.id
     )
     db.add(new_member)
@@ -179,12 +185,12 @@ def get_all_audit(db: Session, group_id: int) -> List[Audit]:
         select(Audit).where(Audit.expense_group_id == group_id)
     )
 
-def create_audit(db: Session, audit:AuditRead, group_id : int) -> Audit | None:
+def create_audit(db: Session, audit:AuditRead, group_id : int, created_by: User) -> Audit | None:
     new_audit = Audit(
         change_description = audit.change_description,
         expense_group_id = group_id,
-        created_by = audit.created_by.id,
-        created_on = audit.created_on,         
+        created_by = created_by.id,
+        created_on = datetime.now(),         
     )
     
     db.add(new_audit)
@@ -193,14 +199,14 @@ def create_audit(db: Session, audit:AuditRead, group_id : int) -> Audit | None:
     return new_audit
 
 #-----------Expense-----------------
-def get_expense(db: Session, expense_id:int) -> Expense:
+def get_expense(db: Session, expense_id:int, ) -> Expense:
     return db.exec(
-        select(Expense).where(Expense.id == expense_id).first()
-    )
+        select(Expense).where(Expense.id == expense_id)
+    ).first()
 
 def get_expenses_by_group_id(db: Session, group_id:int) -> List[Expense]:
     return db.exec(
-        select(Expense).where(Expense.group_id == group_id)
+        select(Expense).where(Expense.expense_group_id == group_id)
     )
     
 def get_expense_by_group_id(db: Session, group_id:int) -> List[Expense]:
@@ -208,17 +214,17 @@ def get_expense_by_group_id(db: Session, group_id:int) -> List[Expense]:
         select(Expense).where(Expense.expense_group_id == group_id)
     )
     
-def create_expense(db: Session, expense: ExpenseCreate, group_id:int) -> Expense | None:
+def create_expense(db: Session, expense: ExpenseCreate, group_id:int, creator: User) -> Expense | None:
     new_expense = Expense(
         expense_group_id=group_id,
         name = expense.name,
         amount = expense.amount,
         payment_date = expense.payment_date,
-        payer_id = expense.payer.id, # nested object => UserRead
+        payer_id = expense.payer, # nested object => UserRead
         description = expense.description,
-        created_by = expense.created_by.id,
+        created_by = creator.id,
         created_on = datetime.now(),
-        modified_by = expense.modified_by.id,
+        modified_by = creator.id,
         modified_on = datetime.now() 
     )
     
@@ -227,7 +233,7 @@ def create_expense(db: Session, expense: ExpenseCreate, group_id:int) -> Expense
     db.refresh(new_expense)
     return new_expense
 
-def update_expense(db: Session, expense: ExpenseUpdate, expense_id: int) -> Expense | None:
+def update_expense(db: Session, expense: ExpenseUpdate, expense_id: int, modified_by:User) -> Expense | None:
     db_expense = get_expense(db, expense_id)
     if not db_expense:
         raise HTTPException(status_code=404, detail="Expense not found")
@@ -243,7 +249,7 @@ def update_expense(db: Session, expense: ExpenseUpdate, expense_id: int) -> Expe
     if expense.description is not None:
         db_expense.description = expense.description
     
-    db_expense.modified_by = expense.modified_by.id
+    db_expense.modified_by = modified_by.id
     db_expense.modified_on = datetime.now()
     
     db.commit()
@@ -262,11 +268,11 @@ def delete_expense(db: Session, expense_id: int) -> None:
 #------------- Recurring Expense---------------
 def get_recurring_expense(db: Session, expense_id:int) -> RecurringExpense:
     return db.exec(
-        select(RecurringExpense).where(RecurringExpense.id == expense_id).first()
-    )
+        select(RecurringExpense).where(RecurringExpense.expense_id == expense_id)
+    ).first()
 
 ## creation of recurring expense to be a 2 step process (expense created in db first followed by recurring), enforced in BL
-def create_recurring_expense(db: Session, expense: RecurringExpenseBase, group_id:int, expense_id:int) -> RecurringExpense | None:
+def create_recurring_expense(db: Session, expense: RecurringExpenseBase, expense_id:int, creator: User) -> RecurringExpense | None:
     db_expense = get_expense(db, expense_id)
     if not db_expense:
         raise HTTPException(status_code=404, detail="Expense not found")
@@ -276,9 +282,9 @@ def create_recurring_expense(db: Session, expense: RecurringExpenseBase, group_i
         frequency = expense.frequency,
         start_date = expense.start_date,
         end_date = expense.end_date,
-        created_by = expense.created_by.id,
+        created_by = creator.id,
         created_on = datetime.now(),
-        modified_by = expense.modified_by.id,
+        modified_by = creator.id,
         modified_on = datetime.now()
     )
     
@@ -287,7 +293,7 @@ def create_recurring_expense(db: Session, expense: RecurringExpenseBase, group_i
     db.refresh(new_recurring_expense)
     return new_recurring_expense
 
-def update_recurring_expense(db: Session, expense: RecurringExpenseBase, expense_id: int) -> RecurringExpense | None:
+def update_recurring_expense(db: Session, expense: RecurringExpenseBase, expense_id: int, modified_by: User) -> RecurringExpense | None:
     db_recurring_expense = get_recurring_expense(db, expense_id)
     if not db_recurring_expense:
         raise HTTPException(status_code=404, detail="Expense not found")
@@ -299,7 +305,7 @@ def update_recurring_expense(db: Session, expense: RecurringExpenseBase, expense
     if expense.end_date is not None:
         db_recurring_expense.end_date = expense.end_date
     
-    db_recurring_expense.modified_by = expense.modified_by.id
+    db_recurring_expense.modified_by = modified_by.id
     db_recurring_expense.modified_on = datetime.now()
     
     db.commit()
@@ -326,7 +332,7 @@ def get_breakdown_by_expense_id(db: Session, expense_id:int) -> List[Breakdown]:
         select(Breakdown).where(Breakdown.expense_id == expense_id)
     )
 
-def create_breakdown(db: Session, breakdown:BreakdownBase, expense_id: int, created_by: UserRead) -> Breakdown | None:
+def create_breakdown(db: Session, breakdown:BreakdownBase, expense_id: int, created_by: User) -> Breakdown | None:
     new_breakdown = Breakdown(
         expense_id = expense_id,
         amount =  breakdown.amount,
@@ -342,7 +348,7 @@ def create_breakdown(db: Session, breakdown:BreakdownBase, expense_id: int, crea
     db.refresh(new_breakdown)
     return new_breakdown
 
-def update_breakdown(db: Session, breakdown:BreakdownBase, breakdown_id:int, modified_by: UserRead) -> Breakdown:
+def update_breakdown(db: Session, breakdown:BreakdownBase, breakdown_id:int, modified_by: User) -> Breakdown:
     db_breakdown = get_breakdown(db, breakdown_id)
     if not db_breakdown:
         raise HTTPException(status_code=404,detail= "Breakdown not found")
