@@ -42,7 +42,7 @@ class Member(SQLModel, table = True):
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key= "user.id")
     expense_group_id: int = Field(foreign_key="expense_group.id")
-    is_admin: bool = Field(default=False)
+    # is_admin: bool = Field(default=False)
     added_by: Optional[int] = Field(default=None, foreign_key="member.id")
     added_on: datetime = Field(default_factory=datetime.now)
 

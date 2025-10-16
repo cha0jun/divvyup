@@ -5,7 +5,7 @@ from .models import *
 from .schemas import *
 from .database import engine, SessionDep, get_session
 from .crud import *
-from .services import validate_expense_group, validate_group_member, validate_group_admin
+from .services import validate_expense_group, validate_group_member, validate_group_admin, validate_user_exists
 from .auth import*
 
 app = FastAPI()
@@ -75,7 +75,7 @@ def read_group_members(
     List all members in a specific expense group.
     Only accessible to users who are members of the group.
     """
-
+    validate_expense_group(db, group_id, "Expense group not found")
     validate_group_member(db, current_user.id, group_id, "You are not a member of this group")
     return get_group_members(db, group_id=group_id)
 
@@ -94,53 +94,16 @@ def add_member(
     """
 
     validate_expense_group(db, group_id, "Expense group not found")
-   
-   #current code using is_admin check validate group admin using admin_id. To fix later
-    performing_admin = get_member(db, user_id=current_user.id, group_id=group_id)
-    if not performing_admin or not performing_admin.is_admin:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only group admins can add members"
-        )
-    
-    user_to_add = db.get(User, member_create.user_id)
-    if not user_to_add:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User to add not found"
-        )
+    performing_admin =validate_group_admin(
+        db, 
+        user_id=current_user.id, 
+        group_id=group_id, 
+        error_detail ="Only group admins can add members")
+ 
+    user_to_add = validate_user_exists(db,member_create.user_id, "User to add not found" )
     
     return add_member_to_group(db, group_id, user_to_add, performing_admin)
     
-    
-@app.patch("/groups/{group_id}/members/{member_id}", response_model=MemberRead)
-def update_member(
-    group_id: int,
-    member_id: int,
-    member_update: MemberUpdate,
-    db: SessionDep,
-    current_user: UserDep):
-
-    """
-    Update a member's role within a group (promote to admin).
-    Only group admins can perform this action.
-    """
-    
-    performing_admin = get_member(db, user_id=current_user.id, group_id=group_id)
-    if not performing_admin or not performing_admin.is_admin:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only group admins can update member roles"
-        )
-    
-    updated_member = update_member_role(
-        db=db,
-        member_id=member_id,
-        group_id=group_id,
-        member_update=member_update
-    )
-
-    return updated_member
     
 @app.delete("/groups/{group_id}/members/{member_id}", status_code=status.HTTP_204_NO_CONTENT)
 def remove_member(
@@ -155,16 +118,9 @@ def remove_member(
     Only group admins have permission to remove members.
     """
 
-    # Permission Check: Ensure the current user is an admin
-    performing_admin = get_member(db, user_id=current_user.id, group_id=group_id)
-    if not performing_admin or not performing_admin.is_admin:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only group admins can remove members"
-        )
-    
+    validate_expense_group(db, group_id, "Expense group not found")
+    validate_group_admin( db, current_user.id, group_id,"Only group admins can remove members")
     remove_member_from_group(db, member_id=member_id, group_id=group_id)
-    return None
 
 #------Group Routes--------
 
@@ -188,6 +144,7 @@ def read_user_groups(
             id=g.id,
             name=g.name,
             description=g.description,
+            admin_id = g.admin_id,
             created_on=g.created_on,
             created_by = g.created_by
         )
@@ -213,6 +170,7 @@ def create_expense_group(
         id=new_group.id,
         name=new_group.name,
         description=new_group.description,
+        admin_id = new_group.admin_id,
         created_by=new_group.created_by,
         created_on=new_group.created_on
     )
@@ -264,16 +222,26 @@ def delete_group(
     Only the group admin can delete the group.
     """
     db_group = validate_expense_group(db, group_id, error_detail="Expense group not found")
-   
-    if db_group.admin_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only the group admin can delete this group"
-        )
-
+    validate_group_admin(db, current_user.id, group_id, "Only the group admin can delete this group")
+  
     db.delete(db_group)
     db.commit()
     return None
+
+@app.patch("/groups/{group_id}/change-admin", response_model=ExpenseGroupRead)
+def change_admin(
+    group_id: int,
+    transfer_data: TransferOwnership,
+    db: SessionDep,
+    current_user: UserDep
+):
+    validate_expense_group(db, group_id, "Expense group not found")
+    validate_group_admin(db, current_user.id, group_id, "Only the group owner can transfer ownership")
+    validate_group_member(db, transfer_data.new_admin_user_id, group_id, "New admin must be an existing member of the group")
+
+    updated_group = transfer_admin_rights(db, group_id, transfer_data.new_admin_user_id, current_user)
+
+    return updated_group
 
 #------Expense Routes-------
 @app.get("/groups/{group_id}/expenses", response_model=List[ExpenseRead])

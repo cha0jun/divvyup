@@ -29,7 +29,7 @@ class UserLogin(BaseModel):
 class MemberCreate(BaseModel):
     #User.id of the new user to be added to the group
     user_id: int 
-    is_admin: bool = False
+    # is_admin: bool = False
     #description not showing on swagger 
 
 class MemberUpdate(BaseModel):
@@ -38,7 +38,6 @@ class MemberUpdate(BaseModel):
 
 class MemberRead(BaseModel):
     id: int
-    is_admin: bool
     user: UserRead # Show who the member is
     added_on: datetime
 
@@ -57,10 +56,15 @@ class ExpenseGroupUpdate(BaseModel):
 
 class ExpenseGroupRead(ExpenseGroupBase):
     id: int
+    admin_id: int 
     created_on: datetime
     created_by: int
 
     model_config = ConfigDict(from_attributes=True)
+
+class TransferOwnership(BaseModel):
+    #User ID of the member to promote to admin
+    new_admin_user_id: int
 
 class AuditRead(BaseModel):
     change_description: str

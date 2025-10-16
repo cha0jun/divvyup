@@ -76,22 +76,6 @@ def remove_member_from_group(db: Session, member_id: int, group_id: int)-> Membe
     db.commit()
     return db_member
 
-def update_member_role(db: Session, member_id: int,group_id: int, member_update: MemberUpdate)-> Member:
-    db_member = get_member_by_member_id(db, member_id=member_id)
-    if not db_member:
-        raise HTTPException(status_code=404, detail="Member not found")
-    
-    if db_member.expense_group_id != group_id:
-        raise HTTPException(
-            status_code=404,
-            detail="Member not found in this group"
-        )
-    
-    db_member.is_admin = member_update.is_admin
-    db.commit()
-    db.refresh(db_member)
-    return db_member
-
 def get_group_members(db: Session, group_id: int) -> List[Member]:
     """Retrieve all members of a group."""
     statement = select(Member, User).where(
@@ -102,7 +86,7 @@ def get_group_members(db: Session, group_id: int) -> List[Member]:
     results = db.exec(statement).all()
     return [MemberRead(
             id=member.id,
-            is_admin=member.is_admin,
+            # is_admin=member.is_admin,
             user=UserRead(id=user.id, name=user.name, email=user.email),
             added_on=member.added_on
         )
@@ -154,7 +138,7 @@ def create_group(db: Session, group: ExpenseGroupCreate, creator: User) -> Expen
     creator_member = Member(
         user_id=creator.id,
         expense_group_id=new_group.id,
-        is_admin=True,
+        # is_admin=True,
         added_by =None, # The creator isn't added by another member, so this is None
         added_on=datetime.now()
         )
@@ -179,6 +163,16 @@ def update_expense_group(db: Session, group_id: int, group_update: ExpenseGroupU
     db.refresh(db_group)
     return db_group
 
+def transfer_admin_rights(db: Session, group_id: int, new_admin_user_id: int, modifier: User) -> ExpenseGroup:
+    db_group = get_expense_group(db, group_id)
+    db_group.admin_id = new_admin_user_id
+    db_group.modified_by = modifier.id
+    db_group.modified_on = datetime.now()
+
+    db.add(db_group)
+    db.commit()
+    db.refresh(db_group)
+    return db_group
 
 #-----------Audit-------------------
 def get_all_audit(db: Session, group_id: int) -> List[Audit]:
