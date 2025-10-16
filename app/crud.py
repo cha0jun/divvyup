@@ -34,8 +34,8 @@ def create_user(db: Session, user: UserCreate):
 def get_member(db: Session, user_id: int, group_id: int)-> Member | None:
     return db.exec(
             select(Member).where(
-                Member.user_id == user_id,
-                Member.expense_group_id == group_id
+                (Member.user_id == user_id) &
+                (Member.expense_group_id == group_id)
             )
         ).first()
     
@@ -95,8 +95,8 @@ def update_member_role(db: Session, member_id: int,group_id: int, member_update:
 def get_group_members(db: Session, group_id: int) -> List[Member]:
     """Retrieve all members of a group."""
     statement = select(Member, User).where(
-        Member.expense_group_id == group_id,
-        Member.user_id == User.id
+        (Member.expense_group_id == group_id) &
+        (Member.user_id == User.id)
     ) #JOIN user table ON member.user_id = user.id
 
     results = db.exec(statement).all()
@@ -104,7 +104,7 @@ def get_group_members(db: Session, group_id: int) -> List[Member]:
             id=member.id,
             is_admin=member.is_admin,
             user=UserRead(id=user.id, name=user.name, email=user.email),
-            created_on=member.added_on
+            added_on=member.added_on
         )
         for member, user in results
     ]
@@ -116,6 +116,24 @@ def get_expense_group(db: Session, group_id: int) -> Optional[ExpenseGroup]:
     return db.exec(
         select(ExpenseGroup).where(ExpenseGroup.id == group_id)
     ).first()
+
+def get_groups_for_user(db: Session, user_id: int):
+    # Query ExpenseGroup where user is admin or a member
+
+    # Get all group IDs where the user is a member
+    member_group_ids = db.exec(
+        select(Member.expense_group_id).where(Member.user_id == user_id)
+    ).all()
+
+    groups = db.exec(
+        select(ExpenseGroup)
+        .where(
+            (ExpenseGroup.admin_id == user_id) |
+            (ExpenseGroup.id.in_(member_group_ids))
+            )
+    ).all()
+    return groups
+
 
 def create_group(db: Session, group: ExpenseGroupCreate, creator: User) -> ExpenseGroup:
     new_group = ExpenseGroup(
@@ -159,15 +177,6 @@ def update_expense_group(db: Session, group_id: int, group_update: ExpenseGroupU
     
     db.commit()
     db.refresh(db_group)
-    return db_group
-
-def delete_expense_group(db: Session, group_id: int) -> ExpenseGroup:
-    db_group = get_expense_group(db, group_id)
-    if not db_group:
-        raise HTTPException(status_code=404, detail="Expense group not found")
-    
-    db.delete(db_group)
-    db.commit()
     return db_group
 
 

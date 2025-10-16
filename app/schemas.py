@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from datetime import datetime
 from typing import Optional, List, Dict
 
@@ -27,8 +27,10 @@ class UserLogin(BaseModel):
     
 
 class MemberCreate(BaseModel):
-    user_id: int  
+    #User.id of the new user to be added to the group
+    user_id: int 
     is_admin: bool = False
+    #description not showing on swagger 
 
 class MemberUpdate(BaseModel):
     is_admin: bool
@@ -56,10 +58,8 @@ class ExpenseGroupUpdate(BaseModel):
 class ExpenseGroupRead(ExpenseGroupBase):
     id: int
     created_on: datetime
-    creator: UserRead
-    modified_on: Optional[datetime] = None
-    modified_by: Optional[UserRead] = None
-    
+    created_by: int
+
     model_config = ConfigDict(from_attributes=True)
 
 class AuditRead(BaseModel):

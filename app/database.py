@@ -16,9 +16,14 @@ PROJECT_ROOT = app_dir.parent
 # 4. Construct the final, absolute path to your database file
 DATABASE_PATH = PROJECT_ROOT / "data" / "app.db"
 
+# Ensure data folder exists. May added this line to temporarily fix missing folder error. Remove if you don't face the same issue.
+# DATABASE_PATH.parent.mkdir(parents=True, exist_ok=True)
+
 # 5. Create the database URL with the absolute path
 DATABASE_URL = f"sqlite:///{DATABASE_PATH}"
 
+#May added connect_args={"check_same_thread": False}
+# engine = create_engine(DATABASE_URL, echo=False, connect_args={"check_same_thread": False})
 engine = create_engine(DATABASE_URL, echo=False)
 
 

@@ -29,7 +29,12 @@ class ExpenseGroup(SQLModel, table=True):
     modified_on: datetime = Field(default_factory=datetime.now)
 
     expenses: List["Expense"] = Relationship(back_populates="group")
-    members: List["Member"] = Relationship(back_populates="group")
+   
+    #cascade delete to delete all related Member rows(child) immediately when deleting an ExpenseGroup(parent)
+    members: List["Member"] = Relationship(
+    back_populates="group",
+    sa_relationship_kwargs={"cascade": "all, delete"}
+)
 
 
 class Member(SQLModel, table = True):
@@ -43,6 +48,9 @@ class Member(SQLModel, table = True):
 
     user: User = Relationship(back_populates="memberships")
     group: ExpenseGroup = Relationship(back_populates="members")
+    
+
+
     
 class Expense(SQLModel, table=True):
     __tablename__ = "expense"
