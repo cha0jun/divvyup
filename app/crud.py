@@ -1,11 +1,10 @@
-from fastapi import HTTPException, status, Depends
+from fastapi import HTTPException, status
 from .models import *
 from sqlmodel import Session, select
 from .schemas import *
-from typing import List, Optional, Annotated
+from typing import List, Optional
 from datetime import datetime
-from .database import SessionDep
-from .security import hash_password, verify_password
+from .security import hash_password
 from collections import defaultdict
 
 #----User------

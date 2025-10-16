@@ -68,32 +68,23 @@ class TransferOwnership(BaseModel):
 
 class AuditRead(BaseModel):
     change_description: str
-    created_by: UserRead
-    created_on: datetime
 
     model_config = ConfigDict(from_attributes=True)
 
 class ExpenseBase(BaseModel):
     name: str
     description: Optional[str] = None
-    payer: UserRead
+    payer: int
     amount: float
     payment_date: datetime
-    created_by: UserRead
-    modified_by: UserRead
     
 # might be possible to use ExpenseBase across
     
 class ExpenseRead(ExpenseBase):
-    id: int
-    payer: UserRead
-    created_by: UserRead
-    modified_by: UserRead
-
-    model_config = ConfigDict(from_attributes=True)
+    pass
 
 class ExpenseCreate(ExpenseBase):
-    payer_id: int
+    pass
 #When creating an expense, the client should only send the ID of the payer.
 ## The `created_by` and `modified_by` will be set by the server from the current user.
 
@@ -102,11 +93,11 @@ class ExpenseUpdate(ExpenseBase):
     description: Optional[str] = None
     amount: Optional[float] = None
     payment_date: Optional[datetime] = None
-    payer_id: Optional[int] = None
+    payer: Optional[int] = None
 
 #For updates, all fields should be optional.
 
-class RecurringExpenseBase(ExpenseBase):
+class RecurringExpenseBase(BaseModel):
     frequency: str
     start_date: datetime
     end_date: Optional[datetime] = None

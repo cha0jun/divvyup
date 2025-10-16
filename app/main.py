@@ -1,9 +1,9 @@
 import logging
-from fastapi import FastAPI, Depends, HTTPException, status, Body
+from fastapi import FastAPI, Depends, HTTPException, status
 from typing import List
 from .models import *
 from .schemas import *
-from .database import engine, SessionDep, get_session
+from .database import engine, SessionDep
 from .crud import *
 from .services import validate_expense_group, validate_group_member, validate_group_admin, validate_user_exists
 from .auth import*

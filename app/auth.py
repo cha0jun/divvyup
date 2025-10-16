@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from fastapi import HTTPException, Header, Depends, status
+from fastapi import HTTPException, Depends, status
 from datetime import datetime, timedelta, timezone
 from jose import JWTError, jwt
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials 
