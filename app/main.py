@@ -8,16 +8,12 @@ from .crud import *
 from .services import validate_expense_group, validate_group_member, validate_group_admin, validate_user_exists
 from .auth import*
 
-app = FastAPI()
-
 #Add startup event handler 
-@app.on_event("startup")
-def on_startup():
-    """
-    This function runs when the application starts.
-    It creates all the database tables defined in your models.py file.
-    """
+async def lifespan(app: FastAPI):
     SQLModel.metadata.create_all(engine)
+    yield
+    
+app = FastAPI(lifespan=lifespan)
 
 #------User Routes-------
 
