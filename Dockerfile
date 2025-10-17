@@ -3,7 +3,7 @@ FROM python:3.12-slim
 
 # Copy the main application file into the container /app dir
 WORKDIR /app
-COPY app/main.py /app/main.py
+COPY app /app
 COPY cert.pem /app/cert.pem
 COPY key.pem /app/key.pem
 
