@@ -3,6 +3,8 @@ FROM python:3.12-slim
 
 # Copy the main application file into the container /app dir
 WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 COPY app /app
 COPY cert.pem /app/cert.pem
 COPY key.pem /app/key.pem
