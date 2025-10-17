@@ -203,18 +203,30 @@ def create_expense(db: Session, expense: ExpenseCreate, group_id:int, creator: U
         name = expense.name,
         amount = expense.amount,
         payment_date = expense.payment_date,
-        payer_id = expense.payer, # nested object => UserRead
+        payer_id = expense.payer_id, # nested object => UserRead
         description = expense.description,
         created_by = creator.id,
-        created_on = datetime.now(),
+        # created_on = datetime.now(),
         modified_by = creator.id,
-        modified_on = datetime.now() 
+        # modified_on = datetime.now() 
     )
     
     db.add(new_expense)
     db.commit()
     db.refresh(new_expense)
+    
+    #create the breakdowns
+    for breakdown_data in expense.breakdowns:
+        create_breakdown(
+            db=db,
+            breakdown=breakdown_data,
+            expense_id=new_expense.id,
+            created_by=creator
+        )
+    
+    db.refresh(new_expense)
     return new_expense
+
 
 def update_expense(db: Session, expense: ExpenseUpdate, expense_id: int, modified_by:User) -> Expense | None:
     db_expense = get_expense(db, expense_id)
@@ -227,13 +239,29 @@ def update_expense(db: Session, expense: ExpenseUpdate, expense_id: int, modifie
         db_expense.amount = expense.amount
     if expense.payment_date is not None:
         db_expense.payment_date = expense.payment_date
-    if expense.payer.id is not None:
-        db_expense.payer_id = expense.payer.id
+    if expense.payer_id is not None:
+        db_expense.payer_id = expense.payer_id
     if expense.description is not None:
         db_expense.description = expense.description
+
+    
+    if getattr(expense, "breakdowns", None) is not None:
+        # Delete all old breakdowns for this expense
+        for old_breakdown in db_expense.breakdowns:
+            db.delete(old_breakdown)
+
+
+        # Create the new breakdowns from the request
+        for breakdown_data in expense.breakdowns:
+            create_breakdown(
+                db=db,
+                breakdown=breakdown_data,
+                expense_id=db_expense.id,
+                created_by=modified_by
+            )
     
     db_expense.modified_by = modified_by.id
-    db_expense.modified_on = datetime.now()
+    # db_expense.modified_on = datetime.now()
     
     db.commit()
     db.refresh(db_expense)
@@ -308,12 +336,12 @@ def delete_recurring_expense(db: Session, expense_id: int) -> None:
 def get_breakdown(db: Session, breakdown_id:int) -> Breakdown:
     return db.exec(
         select(Breakdown).where(Breakdown.id == breakdown_id)
-    )
+    ).first()
 
 def get_breakdown_by_expense_id(db: Session, expense_id:int) -> List[Breakdown]:
     return db.exec(
         select(Breakdown).where(Breakdown.expense_id == expense_id)
-    )
+    ).all
 
 def create_breakdown(db: Session, breakdown:BreakdownBase, expense_id: int, created_by: User) -> Breakdown | None:
     new_breakdown = Breakdown(
@@ -321,9 +349,7 @@ def create_breakdown(db: Session, breakdown:BreakdownBase, expense_id: int, crea
         amount =  breakdown.amount,
         debtor_id = breakdown.debtor_id,
         created_by = created_by.id,
-        created_on = datetime.now(),
-        modified_by = created_by.id,
-        modified_on = datetime.now()
+        modified_by = created_by.id
     )
     
     db.add(new_breakdown)
@@ -341,7 +367,7 @@ def update_breakdown(db: Session, breakdown:BreakdownBase, breakdown_id:int, mod
     if breakdown.debtor_id is not None:
         db_breakdown.debtor_id = breakdown.debtor_id
     
-    db_breakdown.modified_on = datetime.now()
+    # db_breakdown.modified_on = datetime.now()
     db_breakdown.modified_by = modified_by.id
     
     db.commit()

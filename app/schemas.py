@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field as PydanticField, field_validator
 from datetime import datetime
 from typing import Optional, List, Dict
 
@@ -71,32 +71,71 @@ class AuditRead(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+ # ---------Breakdown Schemas--------   
+
+class BreakdownBase(BaseModel):
+    debtor_id: int
+    amount: float = PydanticField(gt=0)
+
+class BreakdownCreate(BreakdownBase):
+    pass
+
+class BreakdownUpdate(BaseModel):
+    debtor_id: Optional[int] = None
+    amount: Optional[float] = PydanticField(default=None, gt=0)
+
+class BreakdownRead(BreakdownBase):
+    id: int
+    expense_id: int
+    
+    model_config = ConfigDict(from_attributes=True)
+
+# ---------Expense Schemas--------
+ 
 class ExpenseBase(BaseModel):
     name: str
     description: Optional[str] = None
-    payer: int
+    payer_id: int
     amount: float
     payment_date: datetime
     
 # might be possible to use ExpenseBase across
     
-class ExpenseRead(ExpenseBase):
-    pass
-
 class ExpenseCreate(ExpenseBase):
-    pass
-#When creating an expense, the client should only send the ID of the payer.
-## The `created_by` and `modified_by` will be set by the server from the current user.
+    breakdowns: List[BreakdownCreate]
 
-class ExpenseUpdate(ExpenseBase):
+    @field_validator('breakdowns')
+    @classmethod
+    def validate_breakdowns(cls, breakdowns: List[BreakdownCreate], info):
+        if not breakdowns:
+            raise ValueError("At least one breakdown is required")
+        
+        # Optional: Validate total of breakdowns matches expense amount
+        total = sum(b.amount for b in breakdowns)
+        amount = info.data.get('amount')
+        if amount and abs(total - amount) > 0.01:  # Allow for rounding
+            raise ValueError(f"Breakdown total ({total}) must equal expense amount ({amount})")
+        
+        return breakdowns
+
+
+class ExpenseUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
     amount: Optional[float] = None
     payment_date: Optional[datetime] = None
-    payer: Optional[int] = None
+    payer_id: Optional[int] = None
+    breakdowns: Optional[List[BreakdownCreate]] = None
 
-#For updates, all fields should be optional.
+class ExpenseRead(ExpenseBase):
+    id: int
+    expense_group_id: int
+    breakdowns: List[BreakdownRead] = []
 
+    model_config = ConfigDict(from_attributes=True)
+
+
+## ---------Recurring Expense Schemas--------
 class RecurringExpenseBase(BaseModel):
     frequency: str
     start_date: datetime

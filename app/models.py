@@ -94,7 +94,14 @@ class Expense(SQLModel, table=True):
     )
 
     group: ExpenseGroup = Relationship(back_populates="expenses")
-    breakdowns: List["Breakdown"] = Relationship(back_populates="expense")
+    breakdowns: List["Breakdown"] = Relationship(
+    back_populates="expense",
+    sa_relationship_kwargs={
+        "cascade": "all, delete-orphan",
+        "passive_deletes": True
+    }
+    )
+
 
 class Breakdown(SQLModel, table = True):
     __tablename__ = "breakdown"
@@ -114,7 +121,7 @@ class Breakdown(SQLModel, table = True):
         sa_column=Column(DateTime, nullable=False)
     )
     
-    expense: Expense = Relationship(back_populates="breakdowns")
+    expense: Optional["Expense"] = Relationship(back_populates="breakdowns")
 
 
 class RecurringExpense(SQLModel, table=True):

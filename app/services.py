@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, Depends, Body, status
 from .database import Session
-from .crud import get_expense_group, get_member, create_member, get_member_by_member_id
-from .models import ExpenseGroup, Member, User
+from .crud import get_expense_group, get_member, create_member, get_member_by_member_id, get_expense
+from .models import ExpenseGroup, Member, User, Expense
 from sqlalchemy.exc import IntegrityError
 
 
@@ -74,3 +74,24 @@ def validate_member_exists_in_group(db: Session, member_id: int, group_id: int, 
             detail=error_detail or "Member not found in this group"
         )
     return db_member
+
+#---------Expense route validation-------
+def validate_expense_in_group( db: Session, expense_id: int, group_id: int, error_detail: str | None = None) -> Expense:
+    """
+    Validate that an expense exists and belongs to the specified group.
+    """
+    expense = get_expense(db, expense_id)
+    
+    if not expense:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=error_detail or "Expense not found"
+        )
+    
+    if expense.expense_group_id != group_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=error_detail or "Expense not found in this group"
+        )
+    
+    return expense

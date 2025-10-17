@@ -6,6 +6,7 @@ from .schemas import *
 from .database import engine, SessionDep
 from .crud import *
 from .services import validate_expense_group, validate_group_member, validate_group_admin, validate_user_exists, add_member_to_group_service, validate_member_exists_in_group
+from .services import validate_expense_in_group
 from .auth import*
 
 #Add startup event handler 
@@ -242,35 +243,48 @@ def get_expenses_bl(group_id:int,  db: SessionDep, current_user: UserDep):
     validate_group_member(db, current_user.id, group_id, "Only members can view group expenses")
     
     expenses = get_expenses_by_group_id(db, group_id)
+    return expenses
     
-    exp_list = [ ExpenseRead(
-            name = e.name,
-            description = e.description,
-            payer = e.payer_id,
-            amount = e.amount,
-            payment_date = e.payment_date
-        ) for e in expenses]
+    # exp_list = [ ExpenseRead(
+    #         name = e.name,
+    #         description = e.description,
+    #         payer = e.payer_id,
+    #         amount = e.amount,
+    #         payment_date = e.payment_date
+    #     ) for e in expenses]
     
-    return exp_list
+    # return exp_list
 
 @app.get("/groups/{group_id}/expenses/{expense_id}", response_model=ExpenseRead)
 def get_expense_by_id_bl(group_id:int, expense_id:int, db: SessionDep, current_user: UserDep):
     validate_expense_group(db, group_id, "Expense group not found.")
     validate_group_member(db, current_user.id, group_id, "Only members can view group expenses")
     
-    e = get_expense(db,expense_id)
-    
-    return ExpenseRead(
-            name = e.name,
-            description = e.description,
-            payer = e.payer_id,
-            amount = e.amount,
-            payment_date = e.payment_date)
+    e = validate_expense_in_group(db, expense_id, group_id, "Expense not found in this group")
 
-@app.post("/groups/{group_id}/expenses", response_model=ExpenseCreate)
+    return e
+
+    # return ExpenseRead(
+    #         name = e.name,
+    #         description = e.description,
+    #         payer = e.payer_id,
+    #         amount = e.amount,
+    #         payment_date = e.payment_date)
+
+@app.post("/groups/{group_id}/expenses", response_model=ExpenseRead,status_code=status.HTTP_201_CREATED)
 def create_expense_bl(group_id:int, expense:ExpenseCreate, db: SessionDep, current_user: UserDep):
+      
+    """
+    Create a new expense with breakdowns (splits).
+    The sum of breakdown amounts must equal the expense amount.
+    """
+      
     validate_expense_group(db, group_id, "Expense group not found.")
     validate_group_member(db, current_user.id, group_id, "Only members can add group expenses")
+    validate_group_member(db, expense.payer_id, group_id, "Payer must be a group member")
+
+    for breakdown in expense.breakdowns:
+        validate_group_member(db, breakdown.debtor_id, group_id, "All debtors must be group members")
     
     created_expense = create_expense(db, expense, group_id,current_user)
     create_audit(
@@ -284,14 +298,10 @@ def create_expense_bl(group_id:int, expense:ExpenseCreate, db: SessionDep, curre
         group_id,
         current_user
         )
-    return ExpenseRead(
-            name = created_expense.name,
-            description = created_expense.description,
-            payer = created_expense.payer_id,
-            amount = created_expense.amount,
-            payment_date = created_expense.payment_date)
-
-@app.put("/groups/{group_id}/expenses/{expense_id}", response_model=ExpenseUpdate)
+    
+    return created_expense
+  
+@app.patch("/groups/{group_id}/expenses/{expense_id}", response_model=ExpenseRead)
 def update_expense_bl(group_id:int, expense_id:int, expense: ExpenseUpdate, db: SessionDep, current_user: UserDep):
     validate_expense_group(db, group_id, "Expense group not found.")
     validate_group_member(db, current_user.id, group_id, "Only members can update group expenses")
@@ -305,16 +315,15 @@ def update_expense_bl(group_id:int, expense_id:int, expense: ExpenseUpdate, db: 
             created_by= current_user.id,
             created_on= datetime.now()
         ),
-        group_id
+        group_id,
+        current_user
         )
-    return ExpenseRead(
-            name = updated_expense.name,
-            description = updated_expense.description,
-            payer = updated_expense.payer_id,
-            amount = updated_expense.amount,
-            payment_date = updated_expense.payment_date)
+    
+    return updated_expense
 
-@app.delete("/groups/{group_id}/expenses/{expense_id}",response_model = ExpenseBase)
+# @app.delete("/groups/{group_id}/expenses/{expense_id}",response_model = ExpenseBase)
+#remove response_model because endpoint don't return anything
+@app.delete("/groups/{group_id}/expenses/{expense_id}",status_code=204)
 def delete_expense_bl(group_id:int, expense_id:int, db: SessionDep, current_user: UserDep):
     validate_expense_group(db, group_id, "Expense group not found.")
     validate_group_member(db, current_user.id, group_id, "Only members can delete group expenses")
@@ -336,6 +345,12 @@ def delete_expense_bl(group_id:int, expense_id:int, db: SessionDep, current_user
     
     return
              
+#--------Expense Breakdown Routes------
+
+# @app.post("/groups/{group_id}/expenses/{expense_id}/breakdowns"_)
+# def add_breakdown():
+#     pass
+
 
 #------Recurring Expense Routes-------
 @app.get("/groups/{group_id}/expenses/{expense_id}/recurring", response_model = RecurringExpenseBase)
