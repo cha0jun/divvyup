@@ -130,7 +130,7 @@ class RecurringExpense(SQLModel, table=True):
     expense_id: int = Field(primary_key=True, foreign_key="expense.id")
     frequency: str 
     start_date: datetime #removed default. User must provide
-    end_date: Optional[datetime] = None 
+    end_date: datetime
     created_by: int = Field(foreign_key="user.id")
     created_on: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),

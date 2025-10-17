@@ -139,7 +139,7 @@ class ExpenseRead(ExpenseBase):
 class RecurringExpenseBase(BaseModel):
     frequency: str
     start_date: datetime
-    end_date: Optional[datetime] = None
+    end_date: datetime
 
 ## to create delete when nesscessary
 

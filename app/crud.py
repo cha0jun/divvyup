@@ -182,7 +182,7 @@ def create_audit(db: Session, audit:AuditRead, group_id : int, created_by: User)
     return new_audit
 
 #-----------Expense-----------------
-def get_expense(db: Session, expense_id:int, ) -> Expense:
+def get_expense(db: Session, expense_id:int ) -> Expense:
     return db.exec(
         select(Expense).where(Expense.id == expense_id)
     ).first()

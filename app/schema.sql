@@ -162,7 +162,7 @@ CREATE INDEX idx_audit_group ON audit(expense_group_id);
 -- Automatically update the 'modified_on' timestamp for relevant tables.
 -- -----------------------------------------------------------------------------
 CREATE TRIGGER update_user_modified_on
-AFTER UPDATE ON "user"
+AFTER UPDATE ON user
 FOR EACH ROW
 BEGIN
     UPDATE "user" SET modified_on = CURRENT_TIMESTAMP WHERE id = OLD.id;

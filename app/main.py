@@ -94,6 +94,18 @@ def add_member(
     user_to_add = validate_user_exists(db,member_create.user_id, "User to add not found" )
     new_member = add_member_to_group_service(db, user_to_add, group_id, performing_admin)
     
+    create_audit(
+        db,
+        AuditRead(
+            change_description= f' {new_member.name} added to group by {current_user.name}.',
+            expense_group_id = group_id,
+            created_by= current_user.id,
+            created_on= datetime.now()
+        ),
+        group_id,
+        current_user
+        )
+    
     return new_member
     
     
@@ -113,6 +125,18 @@ def remove_member(
     validate_expense_group(db, group_id, "Expense group not found")
     validate_group_admin( db, current_user.id, group_id,"Only group admins can remove members")
     validate_member_exists_in_group(db, member_id, group_id, "Member not found in this group")
+    
+    create_audit(
+        db,
+        AuditRead(
+            change_description= f'Member {member_id} removed from group by {current_user.name}.',
+            expense_group_id = group_id,
+            created_by= current_user.id,
+            created_on= datetime.now()
+        ),
+        group_id,
+        current_user
+        )
     remove_member_from_group(db, member_id=member_id)
 
 #------Group Routes--------
@@ -167,7 +191,6 @@ def create_expense_group(
         created_by=new_group.created_by,
         created_on=new_group.created_on
     )
-    #return ExpenseGroupRead.from_orm(new_group)
 
 @app.get("/groups/{group_id}", response_model=ExpenseGroupRead)
 def read_expense_group(
@@ -202,6 +225,19 @@ def update_group_details(
                          error_detail="Only the group admin can update this group")
 
     updated_group = update_expense_group(db, group_id=group_id, group_update=group_update, modifier=current_user)
+    
+    create_audit(
+        db,
+        AuditRead(
+            change_description= f'Group updated by {current_user.name}.',
+            expense_group_id = group_id,
+            created_by= current_user.id,
+            created_on= datetime.now()
+        ),
+        group_id,
+        current_user
+        )
+    
     return updated_group
 
 @app.delete("/groups/{group_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -245,15 +281,6 @@ def get_expenses_bl(group_id:int,  db: SessionDep, current_user: UserDep):
     expenses = get_expenses_by_group_id(db, group_id)
     return expenses
     
-    # exp_list = [ ExpenseRead(
-    #         name = e.name,
-    #         description = e.description,
-    #         payer = e.payer_id,
-    #         amount = e.amount,
-    #         payment_date = e.payment_date
-    #     ) for e in expenses]
-    
-    # return exp_list
 
 @app.get("/groups/{group_id}/expenses/{expense_id}", response_model=ExpenseRead)
 def get_expense_by_id_bl(group_id:int, expense_id:int, db: SessionDep, current_user: UserDep):
@@ -264,12 +291,6 @@ def get_expense_by_id_bl(group_id:int, expense_id:int, db: SessionDep, current_u
 
     return e
 
-    # return ExpenseRead(
-    #         name = e.name,
-    #         description = e.description,
-    #         payer = e.payer_id,
-    #         amount = e.amount,
-    #         payment_date = e.payment_date)
 
 @app.post("/groups/{group_id}/expenses", response_model=ExpenseRead,status_code=status.HTTP_201_CREATED)
 def create_expense_bl(group_id:int, expense:ExpenseCreate, db: SessionDep, current_user: UserDep):
@@ -321,8 +342,6 @@ def update_expense_bl(group_id:int, expense_id:int, expense: ExpenseUpdate, db: 
     
     return updated_expense
 
-# @app.delete("/groups/{group_id}/expenses/{expense_id}",response_model = ExpenseBase)
-#remove response_model because endpoint don't return anything
 @app.delete("/groups/{group_id}/expenses/{expense_id}",status_code=204)
 def delete_expense_bl(group_id:int, expense_id:int, db: SessionDep, current_user: UserDep):
     validate_expense_group(db, group_id, "Expense group not found.")
@@ -358,7 +377,6 @@ def get_recurring_expense_bl(group_id:int, expense_id:int, db: SessionDep, curre
     validate_expense_group(db, group_id, "Expense group not found.")
     validate_group_member(db, current_user.id, group_id, "Only members can view recurring expenses")
     re = get_recurring_expense(db, expense_id)
-    e = get_expense(db, expense_id)
     return RecurringExpenseBase(
         frequency= re.frequency,
         start_date= re.start_date,
@@ -370,7 +388,7 @@ def create_recurring_expense_bl(group_id:int, expense_id:int, recurring_expense:
     validate_expense_group(db, group_id, "Expense group not found.")
     validate_group_member(db, current_user.id, group_id, "Only members can add a recurring expense")
     
-    created_re = create_recurring_expense(db,expense_id,recurring_expense, current_user)
+    created_re = create_recurring_expense(db,recurring_expense, expense_id, current_user)
     e = get_expense(db,expense_id)
     
     create_audit(
