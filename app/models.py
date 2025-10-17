@@ -33,9 +33,15 @@ class ExpenseGroup(SQLModel, table=True):
     name: str 
     description: Optional[str] = None
     created_by: int = Field(foreign_key="user.id")
-    created_on: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_on: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        sa_column=Column(DateTime, nullable=False)
+    )
     modified_by: int = Field(foreign_key="user.id")
-    modified_on: datetime 
+    modified_on: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        sa_column=Column(DateTime, nullable=False)
+    )
 
     expenses: List["Expense"] = Relationship(back_populates="group")
    
@@ -43,7 +49,7 @@ class ExpenseGroup(SQLModel, table=True):
     members: List["Member"] = Relationship(
     back_populates="group",
     sa_relationship_kwargs={"cascade": "all, delete"}
-)
+    )
 
 
 class Member(SQLModel, table = True):
@@ -73,7 +79,6 @@ class Expense(SQLModel, table=True):
     expense_group_id: int = Field(foreign_key="expense_group.id")
     amount: float = Field(gt =0)
     payment_date: datetime 
-    #@Matthew payer_id should link to a member id. Only a member can be registered as the payer for an expense. -May
     payer_id: int = Field(foreign_key="user.id")
     name: str
     description: Optional[str] = None
@@ -82,11 +87,11 @@ class Expense(SQLModel, table=True):
         default_factory=lambda: datetime.now(timezone.utc),
         sa_column=Column(DateTime, nullable=False)
     )
+    modified_by: int = Field(foreign_key="user.id")
     modified_on: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),
         sa_column=Column(DateTime, nullable=False)
     )
-    modified_on: datetime 
 
     group: ExpenseGroup = Relationship(back_populates="expenses")
     breakdowns: List["Breakdown"] = Relationship(back_populates="expense")
@@ -116,16 +121,9 @@ class RecurringExpense(SQLModel, table=True):
     __tablename__ = "recurring_expense"
     
     expense_id: int = Field(primary_key=True, foreign_key="expense.id")
-<<<<<<< HEAD
     frequency: str 
     start_date: datetime #removed default. User must provide
     end_date: Optional[datetime] = None 
-=======
-    frequency: str = Field(nullable=False)
-    start_date: datetime = Field(default_factory=datetime.now)
-    #@Matthew end_date field should be Optional[datetime] = None to allow for expenses that run indefintely. -May
-    end_date: Optional[datetime] = None
->>>>>>> 00d95d73579da6ac9c984368445e0f6c83f12d88
     created_by: int = Field(foreign_key="user.id")
     created_on: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),
