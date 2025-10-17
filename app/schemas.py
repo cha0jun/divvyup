@@ -61,7 +61,7 @@ class ExpenseGroupRead(ExpenseGroupBase):
     created_by: int
 
     model_config = ConfigDict(from_attributes=True)
-
+    
 class TransferOwnership(BaseModel):
     #User ID of the member to promote to admin
     new_admin_user_id: int
