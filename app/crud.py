@@ -1,10 +1,10 @@
 from fastapi import HTTPException, status
-from .models import *
+from models import *
 from sqlmodel import Session, select
-from .schemas import *
+from schemas import *
 from typing import List, Optional
 from datetime import datetime
-from .security import hash_password
+from security import hash_password
 from collections import defaultdict
 
 

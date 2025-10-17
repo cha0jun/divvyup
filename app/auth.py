@@ -6,10 +6,10 @@ from jose import JWTError, jwt
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials 
 from typing import Annotated
 
-from .crud import get_user_by_email
-from .database import SessionDep
-from .models import User
-from .security import verify_password
+from crud import get_user_by_email
+from database import SessionDep
+from models import User
+from security import verify_password
 
 
 load_dotenv()

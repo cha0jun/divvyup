@@ -1,13 +1,13 @@
 import logging
 from fastapi import FastAPI, Depends, HTTPException, status
 from typing import List
-from .models import *
-from .schemas import *
-from .database import engine, SessionDep
-from .crud import *
-from .services import validate_expense_group, validate_group_member, validate_group_admin, validate_user_exists, add_member_to_group_service, validate_member_exists_in_group
-from .services import validate_expense_in_group
-from .auth import*
+from models import *
+from schemas import *
+from database import engine, SessionDep
+from crud import *
+from services import validate_expense_group, validate_group_member, validate_group_admin, validate_user_exists, add_member_to_group_service, validate_member_exists_in_group
+from services import validate_expense_in_group
+from auth import*
 
 #Add startup event handler 
 async def lifespan(app: FastAPI):
