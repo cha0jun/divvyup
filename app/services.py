@@ -1,7 +1,8 @@
 from fastapi import FastAPI, HTTPException, Depends, Body, status
 from .database import Session
-from .crud import get_expense_group, get_member
+from .crud import get_expense_group, get_member, create_member, get_member_by_member_id
 from .models import ExpenseGroup, Member, User
+from sqlalchemy.exc import IntegrityError
 
 
 
@@ -35,3 +36,41 @@ def validate_user_exists(db: Session, user_id: int, error_detail: str | None = N
             detail=detail
         )
     return user
+
+def add_member_to_group_service(db: Session, user_to_add: User, group_id: int, performing_admin: Member)-> Member:
+    existing = get_member(db, user_to_add.id, group_id)
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="User is already a member of this group."
+        )
+
+    # To catch IntegrityError
+    try:
+        return create_member(db, user_to_add, group_id, performing_admin)
+    except IntegrityError as e:
+        db.rollback()
+        if "UNIQUE constraint failed" in str(e.orig):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="User is already a member of this group (database constraint)."
+                )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Database error"
+                )
+
+def validate_member_exists_in_group(db: Session, member_id: int, group_id: int, error_detail: str | None = None) -> Member:
+    db_member = get_member_by_member_id(db, member_id)
+    if not db_member:
+        raise HTTPException(
+            status_code=404,
+            detail= error_detail or "Member not found in this group"
+        )
+    if db_member.expense_group_id != group_id:
+        raise HTTPException(
+            status_code=404,
+            detail=error_detail or "Member not found in this group"
+        )
+    return db_member

@@ -7,7 +7,6 @@ PRAGMA foreign_keys = ON;
 -- -----------------------------------------------------------------------------
 DROP TABLE IF EXISTS recurring_expense;
 DROP TABLE IF EXISTS breakdown;
-DROP TABLE IF EXISTS debt;
 DROP TABLE IF EXISTS audit;
 DROP TABLE IF EXISTS expense;
 DROP TABLE IF EXISTS member;
@@ -54,7 +53,7 @@ CREATE TABLE member (
     id INTEGER PRIMARY KEY,
     user_id INTEGER NOT NULL,
     expense_group_id INTEGER NOT NULL,
-    added_by INTEGER NOT NULL,
+    added_by INTEGER,
     added_on TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     FOREIGN KEY(user_id) REFERENCES "user"(id) ON DELETE CASCADE,
@@ -116,39 +115,18 @@ CREATE TABLE breakdown (
     id INTEGER PRIMARY KEY,
     expense_id INTEGER NOT NULL,
     amount REAL NOT NULL,
-    paid_by_id INTEGER NOT NULL, -- Foreign key to the user table
+    debtor_id INTEGER NOT NULL, -- Foreign key to the user table
     created_by INTEGER NOT NULL,
     created_on TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     modified_by INTEGER NOT NULL,
     modified_on TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     FOREIGN KEY(expense_id) REFERENCES expense(id) ON DELETE CASCADE,
-    FOREIGN KEY(paid_by_id) REFERENCES "user"(id) ON DELETE CASCADE,
-    FOREIGN KEY(created_by) REFERENCES "user"(id),
-    FOREIGN KEY(modified_by) REFERENCES "user"(id)
-);
-
--- -----------------------------------------------------------------------------
--- Debt Table
--- Tracks calculated debts between members of a group.
--- -----------------------------------------------------------------------------
-CREATE TABLE debt (
-    id INTEGER PRIMARY KEY,
-    expense_group_id INTEGER NOT NULL,
-    creditor_id INTEGER NOT NULL, -- The user who is owed money
-    debtor_id INTEGER NOT NULL,   -- The user who owes money
-    amount REAL NOT NULL,
-    created_by INTEGER NOT NULL,
-    created_on TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    modified_by INTEGER NOT NULL,
-    modified_on TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    FOREIGN KEY(expense_group_id) REFERENCES expense_group(id) ON DELETE CASCADE,
-    FOREIGN KEY(creditor_id) REFERENCES "user"(id) ON DELETE CASCADE,
     FOREIGN KEY(debtor_id) REFERENCES "user"(id) ON DELETE CASCADE,
     FOREIGN KEY(created_by) REFERENCES "user"(id),
     FOREIGN KEY(modified_by) REFERENCES "user"(id)
 );
+
 
 -- -----------------------------------------------------------------------------
 -- Audit Table
@@ -176,9 +154,6 @@ CREATE INDEX idx_member_group ON member(expense_group_id);
 CREATE INDEX idx_expense_group ON expense(expense_group_id);
 CREATE INDEX idx_expense_payer ON expense(payer_id);
 CREATE INDEX idx_breakdown_expense ON breakdown(expense_id);
-CREATE INDEX idx_debt_group ON debt(expense_group_id);
-CREATE INDEX idx_debt_creditor ON debt(creditor_id);
-CREATE INDEX idx_debt_debtor ON debt(debtor_id);
 CREATE INDEX idx_audit_group ON audit(expense_group_id);
 
 
@@ -221,9 +196,3 @@ BEGIN
     UPDATE breakdown SET modified_on = CURRENT_TIMESTAMP WHERE id = OLD.id;
 END;
 
-CREATE TRIGGER update_debt_modified_on
-AFTER UPDATE ON debt
-FOR EACH ROW
-BEGIN
-    UPDATE debt SET modified_on = CURRENT_TIMESTAMP WHERE id = OLD.id;
-END;

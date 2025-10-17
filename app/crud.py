@@ -6,6 +6,7 @@ from typing import List, Optional
 from datetime import datetime
 from .security import hash_password
 from collections import defaultdict
+from sqlalchemy.exc import IntegrityError
 
 #----User------
 def get_user_by_email(db: Session, email: str) -> User | None:
@@ -43,37 +44,48 @@ def get_member_by_member_id(db: Session, member_id: int)-> Member | None:
             select(Member).where(
                 Member.id == member_id)).first()
 
-def add_member_to_group(db: Session, group_id: int, user_to_add: User, performing_admin: Member)-> Member:
-    existing_member = get_member(db, user_to_add.id,group_id )
-    if existing_member:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="User is already a member of this group"
-        )
-    
-    new_member = Member(
-                user_id=user_to_add.id,
-                expense_group_id=group_id,
-                is_admin=False, # New members are not admins by default
-                added_by=performing_admin.id
-    )
-    db.add(new_member)
-    db.commit()
-    db.refresh(new_member)
-    return new_member
+def create_member( db: Session, user_to_add: User, group_id: int, performing_admin: Member)-> Member:
+    member = Member(user_id=user_to_add.id, expense_group_id=group_id, added_by=performing_admin.id)
+    db.add(member)
+    db.commit()     # <-- may raise IntegrityError
+    db.refresh(member)
+    db.refresh(member, ["user"]) #<---load user relationship for MemberRead 
+    return member
 
-def remove_member_from_group(db: Session, member_id: int, group_id: int)-> Member:
+# def add_member_to_group(db: Session, group_id: int, user_to_add: User, performing_admin: Member)-> Member:
+#     # existing_member = get_member(db, user_to_add.id,group_id )
+#     # if existing_member:
+#     #     raise HTTPException(
+#     #         status_code=status.HTTP_409_CONFLICT,
+#     #         detail="User is already a member of this group"
+#     #     )
+    
+#     new_member = Member(
+#                 user_id=user_to_add.id,
+#                 expense_group_id=group_id,
+#                 added_by=performing_admin.id
+#     )
+#     try:
+#         db.add(new_member)
+#         db.commit()
+#         db.refresh(new_member)
+#         return new_member
+    
+#     except IntegrityError as e:
+#         db.rollback()
+#         if "UNIQUE constraint failed" in str(e.orig):
+#             raise HTTPException(
+#                 status_code=status.HTTP_409_CONFLICT,
+#                 detail="User is already a member of this group"
+#             )
+#         raise
+
+
+def remove_member_from_group(db: Session, member_id: int)-> Member:
     db_member = get_member_by_member_id(db,member_id)
-    if not db_member:
-        raise HTTPException(status_code=404, detail="Member not found")
-    if db_member.expense_group_id != group_id:
-        raise HTTPException(
-            status_code=404,
-            detail="Member not found in this group"
-        )
     db.delete(db_member)
     db.commit()
-    return db_member
+
 
 def get_group_members(db: Session, group_id: int) -> List[Member]:
     """Retrieve all members of a group."""
@@ -85,7 +97,6 @@ def get_group_members(db: Session, group_id: int) -> List[Member]:
     results = db.exec(statement).all()
     return [MemberRead(
             id=member.id,
-            # is_admin=member.is_admin,
             user=UserRead(id=user.id, name=user.name, email=user.email),
             added_on=member.added_on
         )
@@ -137,7 +148,6 @@ def create_group(db: Session, group: ExpenseGroupCreate, creator: User) -> Expen
     creator_member = Member(
         user_id=creator.id,
         expense_group_id=new_group.id,
-        # is_admin=True,
         added_by =None, # The creator isn't added by another member, so this is None
         added_on=datetime.now()
         )

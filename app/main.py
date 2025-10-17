@@ -5,7 +5,7 @@ from .models import *
 from .schemas import *
 from .database import engine, SessionDep
 from .crud import *
-from .services import validate_expense_group, validate_group_member, validate_group_admin, validate_user_exists
+from .services import validate_expense_group, validate_group_member, validate_group_admin, validate_user_exists, add_member_to_group_service, validate_member_exists_in_group
 from .auth import*
 
 #Add startup event handler 
@@ -83,22 +83,17 @@ def add_member(
     db: SessionDep,
     current_user: UserDep
 ):
-    
     """
     Add a new member to an expense group.
     Only group admins are allowed to add members.
     """
 
     validate_expense_group(db, group_id, "Expense group not found")
-    performing_admin =validate_group_admin(
-        db, 
-        user_id=current_user.id, 
-        group_id=group_id, 
-        error_detail ="Only group admins can add members")
- 
+    performing_admin =validate_group_admin(db, current_user.id, group_id, "Only group admins can add members")
     user_to_add = validate_user_exists(db,member_create.user_id, "User to add not found" )
+    new_member = add_member_to_group_service(db, user_to_add, group_id, performing_admin)
     
-    return add_member_to_group(db, group_id, user_to_add, performing_admin)
+    return new_member
     
     
 @app.delete("/groups/{group_id}/members/{member_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -116,7 +111,8 @@ def remove_member(
 
     validate_expense_group(db, group_id, "Expense group not found")
     validate_group_admin( db, current_user.id, group_id,"Only group admins can remove members")
-    remove_member_from_group(db, member_id=member_id, group_id=group_id)
+    validate_member_exists_in_group(db, member_id, group_id, "Member not found in this group")
+    remove_member_from_group(db, member_id=member_id)
 
 #------Group Routes--------
 
@@ -131,7 +127,7 @@ def read_user_groups(
     groups = get_groups_for_user(db, current_user.id)
 
     if not groups:
-        # Return empty list instead of raising 404; user just has no groups
+        # Return empty list instead of raising 404; for users who have no groups
         return []
 
 
