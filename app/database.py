@@ -20,7 +20,7 @@ DATABASE_PATH = PROJECT_ROOT / "data" / "app.db"
 # DATABASE_PATH.parent.mkdir(parents=True, exist_ok=True)
 
 # 5. Create the database URL with the absolute path
-DATABASE_URL = f"sqlite:///{DATABASE_PATH}"
+DATABASE_URL = f"mysql:///{DATABASE_PATH}"
 
 #May added connect_args={"check_same_thread": False}
 # engine = create_engine(DATABASE_URL, echo=False, connect_args={"check_same_thread": False})
