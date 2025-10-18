@@ -2,8 +2,6 @@
 from fastapi import Depends
 from sqlmodel import Session, create_engine
 from typing import Annotated
-from pathlib import Path
-import mysql.connector
 import os
 
 DB_HOST = os.environ.get("DB_HOST")
@@ -12,20 +10,6 @@ DB_PASSWORD = os.environ.get("DB_PASSWORD")
 DB_NAME = os.environ.get("DB_NAME")
 DB_DRIVER = os.environ.get("DB_DRIVER", "pymysql")
 
-try:
-    mydb = mysql.connector.connect(
-      host=DB_HOST,
-      user=DB_USER,
-      password=DB_PASSWORD,
-      database=DB_NAME
-    )
-    print("Successfully connected to the database.")
-    # You can now create a cursor and execute queries
-    # cursor = mydb.cursor()
-    # ...
-
-except mysql.connector.Error as err:
-    print(f"Error: {err}")
 
 '''
 # 1. Get the path to the current file (e.g., .../project-folder/app/database.py)
