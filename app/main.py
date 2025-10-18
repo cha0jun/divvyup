@@ -97,7 +97,7 @@ def add_member(
     create_audit(
         db,
         AuditRead(
-            change_description= f' {new_member.name} added to group by {current_user.name}.',
+            change_description= f' {user_to_add.name} added to group by {current_user.name}.',
             expense_group_id = group_id,
             created_by= current_user.id,
             created_on= datetime.now()

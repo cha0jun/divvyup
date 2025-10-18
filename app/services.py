@@ -60,6 +60,7 @@ def add_member_to_group_service(db: Session, user_to_add: User, group_id: int, p
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Database error"
                 )
+    
 
 def validate_member_exists_in_group(db: Session, member_id: int, group_id: int, error_detail: str | None = None) -> Member:
     db_member = get_member_by_member_id(db, member_id)
