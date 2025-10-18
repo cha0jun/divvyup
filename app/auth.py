@@ -12,7 +12,7 @@ from models import User
 from security import verify_password
 
 
-load_dotenv()
+#load_dotenv()
 
 
 #-----Load secret key----
