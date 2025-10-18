@@ -16,7 +16,7 @@ load_dotenv()
 
 
 #-----Load secret key----
-SECRET = os.getenv("SECRET_KEY")
+SECRET = os.environ.get("SECRET_KEY")
 ALGO = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30 
 
