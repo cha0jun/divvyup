@@ -2,7 +2,8 @@ services:
   app: # Name of the service
     build: . # Build from the Dockerfile in the current directory
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
       - DB_HOST=db
       - DB_USER=root
@@ -24,5 +25,10 @@ services:
     volumes:
       - db-volume:/var/lib/mysql
       - ./init-scripts:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 volumes:
   db-volume:
