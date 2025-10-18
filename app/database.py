@@ -6,12 +6,18 @@ from pathlib import Path
 import mysql.connector
 import os
 
+DB_HOST = os.environ.get("DB_HOST")
+DB_USER = os.environ.get("DB_USER")
+DB_PASSWORD = os.environ.get("DB_PASSWORD")
+DB_NAME = os.environ.get("DB_NAME")
+DB_DRIVER = os.environ.get("DB_DRIVER", "pymysql")
+
 try:
     mydb = mysql.connector.connect(
-      host=os.environ.get('DB_HOST'),
-      user=os.environ.get('DB_USER'),
-      password=os.environ.get('DB_PASSWORD'),
-      database=os.environ.get('DB_NAME')
+      host=DB_HOST,
+      user=DB_USER,
+      password=DB_PASSWORD,
+      database=DB_NAME
     )
     print("Successfully connected to the database.")
     # You can now create a cursor and execute queries
@@ -45,9 +51,12 @@ DATABASE_URL = f"mysql:///{DATABASE_PATH}"
 engine = create_engine(DATABASE_URL, echo=False)
 '''
 
+DATABASE_URL = f"mysql+{DB_DRIVER}://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:3306/{DB_NAME}"
+
+engine = create_engine(DATABASE_URL, echo=False)
 
 def get_session():
-    with Session(mydb) as session:
+    with Session(engine) as session:
         yield session
 # handles sessions between app and db
 SessionDep = Annotated[Session, Depends(get_session)]

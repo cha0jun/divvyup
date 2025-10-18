@@ -8,6 +8,7 @@ services:
       - DB_USER=root
       - DB_PASSWORD=tcx2004
       - DB_NAME=app_db
+      - DB_DRIVER=pymysql
     ports: # Map port 8000 on the host to port 8000 in the container
       - "443:443"
   db:
