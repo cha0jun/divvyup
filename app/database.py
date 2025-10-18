@@ -3,7 +3,25 @@ from fastapi import Depends
 from sqlmodel import Session, create_engine
 from typing import Annotated
 from pathlib import Path
+import mysql.connector
+import os
 
+try:
+    mydb = mysql.connector.connect(
+      host=os.environ.get('DB_HOST'),
+      user=os.environ.get('DB_USER'),
+      password=os.environ.get('DB_PASSWORD'),
+      database=os.environ.get('DB_NAME')
+    )
+    print("Successfully connected to the database.")
+    # You can now create a cursor and execute queries
+    # cursor = mydb.cursor()
+    # ...
+
+except mysql.connector.Error as err:
+    print(f"Error: {err}")
+
+'''
 # 1. Get the path to the current file (e.g., .../project-folder/app/database.py)
 current_file_path = Path(__file__).resolve()
 
@@ -25,10 +43,11 @@ DATABASE_URL = f"mysql:///{DATABASE_PATH}"
 #May added connect_args={"check_same_thread": False}
 # engine = create_engine(DATABASE_URL, echo=False, connect_args={"check_same_thread": False})
 engine = create_engine(DATABASE_URL, echo=False)
+'''
 
 
 def get_session():
-    with Session(engine) as session:
+    with Session(mydb) as session:
         yield session
 # handles sessions between app and db
 SessionDep = Annotated[Session, Depends(get_session)]

@@ -1,10 +1,18 @@
 services:
   app: # Name of the service
     build: . # Build from the Dockerfile in the current directory
+    depends_on:
+      - db
+    environment:
+      - DB_HOST=db
+      - DB_USER=root
+      - DB_PASSWORD=tcx2004
+      - DB_NAME=app_db
     ports: # Map port 8000 on the host to port 8000 in the container
       - "443:443"
   db:
     image: mysql:latest
+    container_name: mysql-db
     environment:
       MYSQL_ROOT_PASSWORD: tcx2004
       MYSQL_USER: app_user
