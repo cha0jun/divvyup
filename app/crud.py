@@ -6,7 +6,7 @@ from typing import List, Optional
 from datetime import datetime
 from security import hash_password
 from collections import defaultdict
-
+from sqlalchemy.orm import selectinload
 
 #----User------
 def get_user_by_id(db: Session, id: int) -> User | None:
@@ -51,14 +51,31 @@ def get_member_by_member_id(db: Session, member_id: int)-> Member | None:
                 Member.id == member_id)).first()
 
 
-def create_member( db: Session, user_to_add: User, group_id: int, performing_admin: Member)-> Member:
+'''def create_member( db: Session, user_to_add: User, group_id: int, performing_admin: Member)-> Member:
     member = Member(user_id=user_to_add.id, expense_group_id=group_id, added_by=performing_admin.id)
     db.add(member)
     db.commit()     # <-- may raise IntegrityError
     db.refresh(member)
     db.refresh(member, ["user"]) #<---load user relationship for MemberRead 
-    return member
+    return member'''
 
+def create_member(db: Session, user_to_add: User, group_id: int, added_by_user_id: int) -> Member:
+    """Creates a new member in a group."""
+    inviter_is_member = get_member(db, user_id=added_by_user_id, group_id=group_id)
+    if not inviter_is_member:
+        # Check if Invter is from the Expense Group.
+        raise HTTPException(status_code=404, detail="Inviter is not a member of the group.")
+
+    member = Member(
+        user_id=user_to_add.id, 
+        expense_group_id=group_id, 
+        added_by=inviter_is_member.id
+    )
+    db.add(member)
+    db.commit()
+    db.refresh(member)
+    db.refresh(member, ["user"])
+    return member
 
 def remove_member_from_group(db: Session, member_id: int)-> Member:
     db_member = get_member_by_member_id(db,member_id)
@@ -469,5 +486,58 @@ def calculate_group_balances(group: ExpenseGroup) -> GroupBalanceResponse:
     
     return GroupBalanceResponse(balances=user_balances)
 
+#--------------Invitation---------------
+def create_invitation(db: Session, group_id: int, inviter: User, invitee_id: int) -> Invitation:
+    """Creates a new invitation record."""
+    new_invitation = Invitation(
+        expense_group_id=group_id,
+        inviter_id=inviter.id,
+        invitee_id=invitee_id
+    )
+    db.add(new_invitation)
+    db.commit()
+    db.refresh(new_invitation)
+    return new_invitation
+
+def get_invitation_by_id(db: Session, invitation_id: int) -> Invitation | None:
+    """Retrieve invitation record by Id."""
+    return db.exec(select(Invitation).where(Invitation.id == invitation_id)).first()
+
+def get_invitation_by_token(db: Session, token: str) -> Invitation | None:
+    """Retrieve invitation record by token."""
+    return db.exec(select(Invitation).where(Invitation.token == token)).first()
+
+def get_pending_invitations_for_group(db: Session, group_id: int) -> List[Invitation]:
+    """Retrieves all pending invitations for an Expense Group."""
+    statement = (
+        select(Invitation)
+        .where(Invitation.expense_group_id == group_id, Invitation.status == InvitationStatus.PENDING)
+        .options(selectinload(Invitation.group), selectinload(Invitation.inviter), selectinload(Invitation.invitee))
+    )
+    return db.exec(statement).all()
     
+def get_pending_invitations_for_user(db: Session, user_id: int) -> List[Invitation]:
+    """Retrieves all pending invitations for a User."""
+    statement = (
+        select(Invitation)
+        .where(Invitation.invitee_id == user_id, Invitation.status == InvitationStatus.PENDING)
+        .options(selectinload(Invitation.group), selectinload(Invitation.inviter), selectinload(Invitation.invitee))
+    )
+    return db.exec(statement).all()
+
+def get_existing_invitations_for_user(db: Session, group_id: int, invitee_id: int) -> Invitation | None:
+    """Checks if a user already has existing pending invite for an Expense Group. Validation for duplicated invites."""
+    statement = select(Invitation).where(
+        Invitation.expense_group_id == group_id,
+        Invitation.invitee_id == invitee_id,
+        Invitation.status == InvitationStatus.PENDING
+    )
+    return db.exec(statement).first()
+
+def update_invitation_status(db: Session, invitation: Invitation, new_status: InvitationStatus) -> Invitation:
+    invitation.status = new_status
+    db.add(invitation)
+    db.commit()
+    db.refresh(invitation)
+    return invitation
 

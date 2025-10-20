@@ -1,7 +1,8 @@
 from typing import Optional, List
 from sqlmodel import Field, SQLModel, Relationship, UniqueConstraint, Column, DateTime
 from datetime import datetime,  timezone
-
+from enum import Enum
+import secrets
 
 # interface for business logic to db
 
@@ -24,6 +25,14 @@ class User(SQLModel, table=True):
         sa_column=Column(DateTime, nullable=False)
     )
     memberships: List["Member"] = Relationship(back_populates="user")
+    sent_invitations: List["Invitation"] = Relationship(
+        back_populates="inviter",
+        sa_relationship_kwargs={"foreign_keys": "[Invitation.inviter_id]"}
+    )
+    received_invitations: List["Invitation"] = Relationship(
+        back_populates="invitee",
+        sa_relationship_kwargs={"foreign_keys": "[Invitation.invitee_id]"}
+    )
 
 class ExpenseGroup(SQLModel, table=True):
     __tablename__ = "expense_group"
@@ -50,6 +59,7 @@ class ExpenseGroup(SQLModel, table=True):
     back_populates="group",
     sa_relationship_kwargs={"cascade": "all, delete"}
     )
+    invitations: List["Invitation"] = Relationship(back_populates="group")
 
 
 class Member(SQLModel, table = True):
@@ -155,5 +165,34 @@ class Audit(SQLModel, table = True):
         sa_column=Column(DateTime, nullable=False)
     )
     
+class InvitationStatus(str, Enum):
+    PENDING = "pending"
+    ACCEPTED = "accepted"
+    DECLINED = "declined"
+    CANCELED = "canceled"
+
+class Invitation(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    expense_group_id: int = Field(foreign_key="expense_group.id")
+    inviter_id: int = Field(foreign_key="user.id")
+    invitee_id: int = Field(foreign_key="user.id")
+    token: str = Field(default_factory=lambda: secrets.token_urlsafe(32), unique=True, index=True)
+    status: InvitationStatus = Field(default=InvitationStatus.PENDING, nullable=False)
+    created_on: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        sa_column=Column(DateTime, nullable=False)
+    )
+    
+    #Relationships
+    group: "ExpenseGroup" = Relationship(back_populates="invitations")
+    inviter: "User" = Relationship(
+        back_populates="sent_invitations",
+        sa_relationship_kwargs={"foreign_keys": "[Invitation.inviter_id]"}
+    )
+    invitee: "User" = Relationship(
+        back_populates="received_invitations",
+        sa_relationship_kwargs={"foreign_keys": "[Invitation.invitee_id]"}
+        )
+
 
     

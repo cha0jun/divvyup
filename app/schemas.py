@@ -1,6 +1,7 @@
-from pydantic import BaseModel, ConfigDict, Field as PydanticField, field_validator
+from pydantic import BaseModel, ConfigDict, Field as PydanticField, field_validator, EmailStr
 from datetime import datetime
 from typing import Optional, List, Dict
+from enum import Enum
 
 # interface for frontend to backend
 
@@ -157,3 +158,30 @@ class UserBalance(BaseModel):
 
 class GroupBalanceResponse(BaseModel):
     balances: Dict[str, UserBalance]
+
+## ---------Invitation Schemas--------
+
+class InvitationCreate(BaseModel):
+    '''Schema for creating an Invitation.'''
+    invitee_email: EmailStr = PydanticField(..., example="new.member@example.com")
+
+class InvitationAction(str, Enum):
+    '''Schema for Invitation action.'''
+    ACCEPT = "accept"
+    DECLINE = "decline"
+
+class InvitationResponse(BaseModel):
+    '''Schema for Invitation response.'''
+    action: InvitationAction
+
+
+class InvitationDetailsRead(BaseModel):
+    '''Schema for Invitation info.'''
+    id: int
+    token: str 
+    invitee: UserRead
+    group: ExpenseGroupRead  
+    inviter: UserRead        
+    status: str
+    created_on: datetime
+    model_config = ConfigDict(from_attributes=True) 

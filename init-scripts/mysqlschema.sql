@@ -8,6 +8,7 @@ SET FOREIGN_KEY_CHECKS=0;
 -- -----------------------------------------------------------------------------
 -- Drop existing tables (in reverse order of creation)
 -- -----------------------------------------------------------------------------
+DROP TABLE IF EXISTS `invitation`;
 DROP TABLE IF EXISTS `recurring_expense`;
 DROP TABLE IF EXISTS `breakdown`;
 DROP TABLE IF EXISTS `audit`;
@@ -28,7 +29,7 @@ CREATE TABLE `user` (
     `email` VARCHAR(255) NOT NULL UNIQUE, -- CONVERSION NOTE: Changed from TEXT
     `password_hash` VARCHAR(255) NOT NULL, -- CONVERSION NOTE: Changed from TEXT as hashes have a fixed length
     `created_on` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- CONVERSION NOTE: Changed from TEXT to DATETIME
-    `modified_on` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP -- CONVERSION NOTE: Changed from TEXT and uses MySQL's auto-update feature
+    `modified_on` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP -- CONVERSION NOTE: Changed from TEXT and uses MySQL auto-update feature
 ) ENGINE=InnoDB;
 
 -- -----------------------------------------------------------------------------
@@ -76,7 +77,7 @@ CREATE TABLE `member` (
 CREATE TABLE `expense` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `expense_group_id` INT NOT NULL,
-    `amount` DECIMAL(10, 2) NOT NULL CHECK(`amount` > 0), -- CONVERSION NOTE: Changed from REAL to DECIMAL for financial accuracy. CHECK constraints are supported in MySQL 8.0.16+.
+    `amount` DECIMAL(10, 2) NOT NULL CHECK(`amount` > 0), -- CONVERSION NOTE: Changed from REAL ato DECIMAL for financial accuracy. CHECK constraints are supported in MySQL 8.0.16+.
     `payment_date` DATE NOT NULL, -- CONVERSION NOTE: Changed from TEXT to DATE
     `payer_id` INT NOT NULL,
     `name` VARCHAR(255) NOT NULL,
@@ -147,6 +148,23 @@ CREATE TABLE `audit` (
     FOREIGN KEY(`created_by`) REFERENCES `user`(`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
+-- -----------------------------------------------------------------------------
+-- Invitation Table
+-- Stores invitations for existing users to join an expense group.
+-- -----------------------------------------------------------------------------
+CREATE TABLE `invitation` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `expense_group_id` INT NOT NULL,
+    `inviter_id` INT NOT NULL,
+    `invitee_id` INT NOT NULL,
+    `token` VARCHAR(255) NOT NULL UNIQUE,
+    `status` VARCHAR(50) NOT NULL DEFAULT 'pending' CHECK(`status` IN ('pending', 'accepted', 'declined', 'canceled')),
+    `created_on` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY(`expense_group_id`) REFERENCES `expense_group`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY(`inviter_id`) REFERENCES `user`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY(`invitee_id`) REFERENCES `user`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB;
 
 -- -----------------------------------------------------------------------------
 -- Indexes
@@ -160,6 +178,10 @@ CREATE INDEX `idx_expense_group` ON `expense`(`expense_group_id`);
 CREATE INDEX `idx_expense_payer` ON `expense`(`payer_id`);
 CREATE INDEX `idx_breakdown_expense` ON `breakdown`(`expense_id`);
 CREATE INDEX `idx_audit_group` ON `audit`(`expense_group_id`);
+CREATE INDEX `idx_invitation_group` ON `invitation`(`expense_group_id`);
+CREATE INDEX `idx_invitation_inviter` ON `invitation`(`inviter_id`);
+CREATE INDEX `idx_invitation_invitee` ON `invitation`(`invitee_id`);
+CREATE INDEX `idx_invitation_token` ON `invitation`(`token`);
 
 
 -- -----------------------------------------------------------------------------
