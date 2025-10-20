@@ -2,7 +2,6 @@ from typing import Optional, List
 from sqlmodel import Field, SQLModel, Relationship, UniqueConstraint, Column, DateTime
 from datetime import datetime,  timezone
 from enum import Enum
-import secrets
 
 # interface for business logic to db
 
@@ -176,7 +175,6 @@ class Invitation(SQLModel, table=True):
     expense_group_id: int = Field(foreign_key="expense_group.id")
     inviter_id: int = Field(foreign_key="user.id")
     invitee_id: int = Field(foreign_key="user.id")
-    token: str = Field(default_factory=lambda: secrets.token_urlsafe(32), unique=True, index=True)
     status: InvitationStatus = Field(default=InvitationStatus.PENDING, nullable=False)
     created_on: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),

@@ -157,7 +157,6 @@ CREATE TABLE `invitation` (
     `expense_group_id` INT NOT NULL,
     `inviter_id` INT NOT NULL,
     `invitee_id` INT NOT NULL,
-    `token` VARCHAR(255) NOT NULL UNIQUE,
     `status` VARCHAR(50) NOT NULL DEFAULT 'pending' CHECK(`status` IN ('pending', 'accepted', 'declined', 'canceled')),
     `created_on` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 

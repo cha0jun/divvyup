@@ -529,9 +529,9 @@ def list_my_received_invitations(db: SessionDep, current_user: UserDep):
     return get_pending_invitations_for_user(db, current_user.id)
 
 # Route 4: Respond to invite (Accept/Decline)
-@app.patch("/invitations/{token}", response_model=InvitationDetailsRead)
-def respond_to_invitation(token: str, response: InvitationResponse, db: SessionDep, current_user: UserDep):
-    invitation = get_invitation_by_token(db, token)
+@app.patch("/invitations/{invitation_id}", response_model=InvitationDetailsRead)
+def respond_to_invitation(invitation_id: int, response: InvitationResponse, db: SessionDep, current_user: UserDep):
+    invitation = get_invitation_by_token(db, invitation_id)
     if not invitation or invitation.status != InvitationStatus.PENDING:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Invitation not found or has expired.")
     if current_user.id != invitation.invitee_id:

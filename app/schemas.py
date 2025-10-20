@@ -178,7 +178,6 @@ class InvitationResponse(BaseModel):
 class InvitationDetailsRead(BaseModel):
     '''Schema for Invitation info.'''
     id: int
-    token: str 
     invitee: UserRead
     group: ExpenseGroupRead  
     inviter: UserRead        

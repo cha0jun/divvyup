@@ -47,7 +47,7 @@ def add_member_to_group_service(db: Session, user_to_add: User, group_id: int, p
 
     # To catch IntegrityError
     try:
-        return create_member(db, user_to_add, group_id, performing_admin)
+        return create_member(db, user_to_add, group_id, performing_admin.user_id)
     except IntegrityError as e:
         db.rollback()
         if "UNIQUE constraint failed" in str(e.orig):

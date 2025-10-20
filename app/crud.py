@@ -50,15 +50,6 @@ def get_member_by_member_id(db: Session, member_id: int)-> Member | None:
             select(Member).where(
                 Member.id == member_id)).first()
 
-
-'''def create_member( db: Session, user_to_add: User, group_id: int, performing_admin: Member)-> Member:
-    member = Member(user_id=user_to_add.id, expense_group_id=group_id, added_by=performing_admin.id)
-    db.add(member)
-    db.commit()     # <-- may raise IntegrityError
-    db.refresh(member)
-    db.refresh(member, ["user"]) #<---load user relationship for MemberRead 
-    return member'''
-
 def create_member(db: Session, user_to_add: User, group_id: int, added_by_user_id: int) -> Member:
     """Creates a new member in a group."""
     inviter_is_member = get_member(db, user_id=added_by_user_id, group_id=group_id)
@@ -503,9 +494,9 @@ def get_invitation_by_id(db: Session, invitation_id: int) -> Invitation | None:
     """Retrieve invitation record by Id."""
     return db.exec(select(Invitation).where(Invitation.id == invitation_id)).first()
 
-def get_invitation_by_token(db: Session, token: str) -> Invitation | None:
+def get_invitation_by_token(db: Session, invitation_id: str) -> Invitation | None:
     """Retrieve invitation record by token."""
-    return db.exec(select(Invitation).where(Invitation.token == token)).first()
+    return db.exec(select(Invitation).where(Invitation.id == invitation_id)).first()
 
 def get_pending_invitations_for_group(db: Session, group_id: int) -> List[Invitation]:
     """Retrieves all pending invitations for an Expense Group."""
