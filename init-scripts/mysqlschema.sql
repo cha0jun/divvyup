@@ -180,7 +180,6 @@ CREATE INDEX `idx_audit_group` ON `audit`(`expense_group_id`);
 CREATE INDEX `idx_invitation_group` ON `invitation`(`expense_group_id`);
 CREATE INDEX `idx_invitation_inviter` ON `invitation`(`inviter_id`);
 CREATE INDEX `idx_invitation_invitee` ON `invitation`(`invitee_id`);
-CREATE INDEX `idx_invitation_token` ON `invitation`(`token`);
 
 
 -- -----------------------------------------------------------------------------
