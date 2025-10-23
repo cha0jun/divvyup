@@ -8,6 +8,7 @@ SET FOREIGN_KEY_CHECKS=0;
 -- -----------------------------------------------------------------------------
 -- Drop existing tables (in reverse order of creation)
 -- -----------------------------------------------------------------------------
+DROP TABLE IF EXISTS `token_blocklist`;
 DROP TABLE IF EXISTS `invitation`;
 DROP TABLE IF EXISTS `recurring_expense`;
 DROP TABLE IF EXISTS `breakdown`;
@@ -166,6 +167,16 @@ CREATE TABLE `invitation` (
 ) ENGINE=InnoDB;
 
 -- -----------------------------------------------------------------------------
+-- Token Blocklist Table
+-- Stores revoked JWT (jti) identifiers until they expire.
+-- -----------------------------------------------------------------------------
+CREATE TABLE `token_blocklist` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `jti` VARCHAR(255) NOT NULL UNIQUE, -- The JWT unique ID (jti)
+    `expiry_dt` DATETIME NOT NULL      -- When the token expires (for cleanup)
+) ENGINE=InnoDB;
+
+-- -----------------------------------------------------------------------------
 -- Indexes
 -- Create indexes on foreign keys to improve query performance.
 -- (CONVERSION NOTE: This syntax is identical between SQLite and MySQL)
@@ -180,6 +191,7 @@ CREATE INDEX `idx_audit_group` ON `audit`(`expense_group_id`);
 CREATE INDEX `idx_invitation_group` ON `invitation`(`expense_group_id`);
 CREATE INDEX `idx_invitation_inviter` ON `invitation`(`inviter_id`);
 CREATE INDEX `idx_invitation_invitee` ON `invitation`(`invitee_id`);
+CREATE INDEX `idx_blocklist_expires` ON `token_blocklist`(`expiry_dt`);
 
 
 -- -----------------------------------------------------------------------------

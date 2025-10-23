@@ -3,10 +3,11 @@ from models import *
 from sqlmodel import Session, select
 from schemas import *
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 from security import hash_password
 from collections import defaultdict
 from sqlalchemy.orm import selectinload
+from sqlalchemy import delete
 
 #----User------
 def get_user_by_id(db: Session, id: int) -> User | None:
@@ -532,3 +533,29 @@ def update_invitation_status(db: Session, invitation: Invitation, new_status: In
     db.refresh(invitation)
     return invitation
 
+#--------------Blocklist---------------
+
+def add_token_to_blocklist(db: Session, jti: str, expiry_dt: datetime):
+    """Add token to blocklist upon log out and delete records of any expired token from table."""
+    try:
+        expired_tokens = delete(TokenBlockList).where(
+            TokenBlockList.expiry_dt < datetime.now(timezone.utc)
+        )
+        db.exec(expired_tokens)
+
+    except Exception as e:
+        print(f"Error deleting records: {e}")
+        db.rollback()
+
+    blocklisted_token = TokenBlockList(jti = jti, expiry_dt = expiry_dt)
+    db.add(blocklisted_token)
+    db.commit()
+    db.refresh(blocklisted_token)
+    return blocklisted_token
+
+def is_token_blocked(db: Session, jti: str) -> bool:
+    """Check if token is in the blocklist."""
+    token = db.exec(
+        select(TokenBlockList).where(TokenBlockList.jti == jti)
+    ).first()
+    return token is not None

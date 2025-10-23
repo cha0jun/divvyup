@@ -1,13 +1,14 @@
 import logging
 from fastapi import FastAPI, Depends, HTTPException, status
 from typing import List
+from datetime import datetime, timezone
 from models import *
 from schemas import *
 from database import engine, SessionDep
 from crud import *
 from services import validate_expense_group, validate_group_member, validate_group_admin, validate_user_exists, add_member_to_group_service, validate_member_exists_in_group
 from services import validate_expense_in_group
-from auth import*
+from auth import *
 
 #Add startup event handler 
 async def lifespan(app: FastAPI):
@@ -50,7 +51,7 @@ def login(db: SessionDep, login_data: UserLogin):
 
 @app.post("/register", response_model = UserRead)
 def register_new_user(db: SessionDep, user: UserCreate):
-    "Register a new user "
+    """Register a new user"""
     is_email_exist = get_user_by_email(db, email = user.email)
     if is_email_exist:
         raise HTTPException(
@@ -58,6 +59,31 @@ def register_new_user(db: SessionDep, user: UserCreate):
             detail = "Email is registered, use another email.")
     new_user = create_user(db, user)
     return new_user
+
+@app.post("/logout", status_code = status.HTTP_204_NO_CONTENT)
+def logout(db: SessionDep, credentials: HTTPAuthorizationCredentials = Depends(http_bearer_scheme)):
+    """Log out current user by adding token to blocklist."""
+    token = credentials.credentials
+    try:
+        payload = decode_token(token)
+        jti = payload.get("jti")
+        exp = payload.get("exp")
+
+        if not jti or not exp:
+            raise HTTPException(
+                status_code = status.HTTP_401_UNAUTHORIZED,
+                detail = "Invalid token payload."
+            )
+        
+        expiry_dt  = datetime.fromtimestamp(exp, tz = timezone.utc)
+        add_token_to_blocklist(db, jti = jti, expiry_dt = expiry_dt)
+        return None
+    
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token for logout."
+            )
 
 #------Member Routes-------
 
@@ -108,6 +134,7 @@ def add_member(
     
     return new_member
     
+
     
 @app.delete("/groups/{group_id}/members/{member_id}", status_code=status.HTTP_204_NO_CONTENT)
 def remove_member(

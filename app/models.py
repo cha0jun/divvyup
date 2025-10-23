@@ -192,5 +192,13 @@ class Invitation(SQLModel, table=True):
         sa_relationship_kwargs={"foreign_keys": "[Invitation.invitee_id]"}
         )
 
+class TokenBlockList(SQLModel, table = True):
+    __tablename__ = "token_blocklist"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    jti: str = Field(unique = True, index = True)
+    expiry_dt: datetime = Field(
+        sa_column = Column(DateTime(timezone = True), nullable = False)
+    )
 
     

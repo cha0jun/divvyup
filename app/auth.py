@@ -5,8 +5,9 @@ from datetime import datetime, timedelta, timezone
 from jose import JWTError, jwt
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials 
 from typing import Annotated
+import uuid
 
-from crud import get_user_by_email
+from crud import get_user_by_email, is_token_blocked
 from database import SessionDep
 from models import User
 from security import verify_password
@@ -24,10 +25,12 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 def create_token(user_id: int, email: str) -> str:
     exp = datetime.now(timezone.utc) + timedelta(minutes = ACCESS_TOKEN_EXPIRE_MINUTES)
+    jti = str(uuid.uuid4())
     payload = {
         "sub": str(user_id),
         "email": email,
-        "exp": exp, 
+        "exp": exp,
+        "jti": jti #token id
     }
     return jwt.encode(payload, SECRET, algorithm=ALGO)
 
@@ -58,11 +61,22 @@ def get_current_user(db: SessionDep, credentials: HTTPAuthorizationCredentials =
     try:
         payload = decode_token(token)
         user_id: str = payload.get("sub")
-        if not user_id:
+        jti: str = payload.get("jti")
+
+        if not user_id or not jti:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token: missing user ID",
+                detail="Invalid token: missing claims",
             )
+        
+        if is_token_blocked(db, jti):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token: logged out",
+            )
+
+
+
     except JWTError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
