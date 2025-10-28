@@ -7,13 +7,13 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import Annotated
 import uuid
 
-from crud import get_user_by_email, is_token_blocked
-from database import SessionDep
-from models import User
-from security import verify_password
+from .crud import get_user_by_email, is_token_blocked
+from .database import SessionDep
+from .models import User
+from .security import verify_password
 
 
-#load_dotenv()
+load_dotenv()
 
 
 #-----Load secret key----

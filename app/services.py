@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, Depends, Body, status
-from database import Session
-from crud import get_expense_group, get_member, create_member, get_member_by_member_id, get_expense
-from models import ExpenseGroup, Member, User, Expense
+from .database import Session
+from .crud import get_expense_group, get_member, create_member, get_member_by_member_id, get_expense
+from .models import ExpenseGroup, Member, User, Expense
 from sqlalchemy.exc import IntegrityError
 
 

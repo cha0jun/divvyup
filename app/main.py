@@ -1,3 +1,4 @@
+'''
 import logging
 from fastapi import FastAPI, Depends, HTTPException, status
 from typing import List
@@ -8,7 +9,12 @@ from database import engine, SessionDep
 from crud import *
 from services import validate_expense_group, validate_group_member, validate_group_admin, validate_user_exists, add_member_to_group_service, validate_member_exists_in_group
 from services import validate_expense_in_group
-from auth import *
+from auth import *'''
+
+from fastapi import FastAPI
+from .database import engine
+from sqlmodel import SQLModel
+from .routers import expense, group, invitation, user
 
 #Add startup event handler 
 async def lifespan(app: FastAPI):
@@ -17,6 +23,12 @@ async def lifespan(app: FastAPI):
     
 app = FastAPI(lifespan=lifespan)
 
+app.include_router(expense.router)
+app.include_router(group.router)
+app.include_router(invitation.router)
+app.include_router(user.router)
+
+'''
 #------User Routes-------
 
 @app.post("/token", response_model = Token)
@@ -601,3 +613,4 @@ def cancel_sent_invitation(invitation_id: int, db: SessionDep, current_user: Use
         )
     
     return None
+    '''
