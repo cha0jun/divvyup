@@ -1,0 +1,24 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Homepage - DivvyUp
+{% endblock %}
+
+{% block content %}
+    <div class="p-5 mb-4 bg-light rounded-3">
+        <div class="container-fluid py-5">
+            <h1 class="display-5 fw-bold">Welcome!</h1>
+            <p class="col-md-8 fs-4">This is the homepage for our amazing application, built with FastAPI and Bootstrap.</p>
+        </div>
+    </div>
+
+    <h2>Recent Items</h2>
+    <div class="row">
+        <!-- Let's imagine we passed a list of 'items' from FastAPI -->
+        {% for item in items %}
+            <div class="col-md-4">
+                {% include 'partials/_item_card.html' %}
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}
