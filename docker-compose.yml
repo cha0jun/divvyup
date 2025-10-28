@@ -11,6 +11,7 @@ services:
       - DB_NAME=app_db
       - DB_DRIVER=pymysql
       - SECRET_KEY=${SECRET_KEY}
+      - ENV=PRD
     ports: # Map port 8000 on the host to port 8000 in the container
       - "443:443"
   db:
