@@ -1,16 +1,15 @@
 import os
 from dotenv import load_dotenv
-from fastapi import HTTPException, Depends, status
+from fastapi import HTTPException, Depends, status, Cookie
 from datetime import datetime, timedelta, timezone
 from jose import JWTError, jwt
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials 
-from typing import Annotated
+from typing import Annotated, Optional
 import uuid
 
-from .crud import get_user_by_email, is_token_blocked
-from .database import SessionDep
-from .models import User
-from .security import verify_password
+from crud import get_user_by_email, is_token_blocked
+from database import SessionDep
+from models import User
+from security import verify_password
 
 
 load_dotenv()
@@ -43,21 +42,31 @@ def decode_token(token: str) -> dict:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token")
 
 def authenticate_user(db: SessionDep, email: str, password: str) -> User:
-    "Authenticate a user by verifying their email and password."
+    """Authenticate a user by verifying their email and password."""
     user = get_user_by_email(db, email)
     if not user or not verify_password(password, user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     return user
 
-http_bearer_scheme = HTTPBearer()
-
-def get_current_user(db: SessionDep, credentials: HTTPAuthorizationCredentials = Depends(http_bearer_scheme) ):
-
+def get_token_from_cookie(access_token: Annotated[str | None, Cookie()] = None) -> str:
     """
-    Dependency to verify JWT token and return the current authenticated user.
-    Raises HTTP 401 if token is invalid or expired.
+    Dependency to get the token from the access_token cookie.
+    Raises 401 if cookie is missing.
     """
-    token = credentials.credentials
+    if access_token is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated (no token).",
+        )
+    return access_token
+
+def get_current_user(
+    db: SessionDep, token: Annotated[str, Depends(get_token_from_cookie)]
+    ) -> User:
+    """
+    Dependency to verify JWT token from cookie 
+    and return the current authenticated user.
+    """
     try:
         payload = decode_token(token)
         user_id: str = payload.get("sub")
@@ -74,9 +83,6 @@ def get_current_user(db: SessionDep, credentials: HTTPAuthorizationCredentials =
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid token: logged out",
             )
-
-
-
     except JWTError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -91,7 +97,19 @@ def get_current_user(db: SessionDep, credentials: HTTPAuthorizationCredentials =
         )
     return user
 
-
+def get_current_user_optional(
+    db: SessionDep, access_token: Annotated[str | None, Cookie()] = None
+) -> User | None:
+    """
+    Dependency to get the current user if they are logged in,
+    but return None instead of raising an error if they are not.
+    """
+    if access_token is None:
+        return None
+    try:
+        return get_current_user(db, token=access_token)
+    except HTTPException:
+        return None
 
 UserDep = Annotated[User, Depends(get_current_user)]
 

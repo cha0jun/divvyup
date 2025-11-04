@@ -1,0 +1,88 @@
+{% extends "layout.html" %}
+
+{% block title %}Register - DivvyUp{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6 col-lg-4">
+        <h1 class="text-center mb-4">Register</h1>
+        
+        <form id="register-form">
+            <div id="error-alert" class="alert alert-danger d-none" role="alert">
+                </div>
+            <div id="success-alert" class="alert alert-success d-none" role="alert">
+                Registration successful! Redirecting to login...
+            </div>
+
+            <div class="mb-3">
+                <label for="name" class="form-label">Name</label>
+                <input type="text" class="form-control" id="name" name="name" required>
+            </div>
+            <div class="mb-3">
+                <label for="email" class="form-label">Email address</label>
+                <input type="email" class="form-control" id="email" name="email" required>
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" class="form-control" id="password" name="password" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Create Account</button>
+        </form>
+        <div class="text-center mt-3">
+            <p>Already have an account? <a href="/login">Login here</a></p>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('register-form').addEventListener('submit', async function(event) {
+        event.preventDefault();
+        
+        const name = document.getElementById('name').value;
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const errorAlert = document.getElementById('error-alert');
+        const successAlert = document.getElementById('success-alert');
+
+        // Clear previous alerts
+        errorAlert.classList.add('d-none');
+        errorAlert.textContent = '';
+        successAlert.classList.add('d-none');
+
+        try {
+            const response = await fetch('/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                // Send data as JSON, as expected by your UserCreate schema
+                body: JSON.stringify({
+                    name: name,
+                    email: email,
+                    password: password
+                })
+            });
+
+            if (response.ok) {
+                // Success!
+                successAlert.classList.remove('d-none');
+                
+                // Redirect to login after a short delay
+                setTimeout(() => {
+                    window.location.href = '/login';
+                }, 2000);
+                
+            } else {
+                // Handle errors
+                const errorData = await response.json();
+                errorAlert.textContent = errorData.detail || 'An unknown error occurred.';
+                errorAlert.classList.remove('d-none');
+            }
+        } catch (error) {
+            // Handle network errors
+            errorAlert.textContent = 'Network error. Please try again.';
+            errorAlert.classList.remove('d-none');
+        }
+    });
+</script>
+{% endblock %}

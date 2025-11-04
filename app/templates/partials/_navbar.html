@@ -1,8 +1,9 @@
 <nav class="navbar navbar-expand-lg bg-body-tertiary">
   <div class="container-fluid">
     <a class="navbar-brand" href="#">
-        <img src="/static/images/dvup.svg" class="d-inline-block" height="50">DivvyUp</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <img src="/static/images/dvup.svg" class="d-inline-block" height="50">DivvyUp</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+      aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
@@ -17,18 +18,33 @@
           <a class="nav-link" href="#">Invitations</a>
         </li>
         <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle disabled" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+          <a class="nav-link dropdown-toggle disabled" href="#" role="button" data-bs-toggle="dropdown"
+            aria-expanded="false">
             Dropdown
           </a>
           <ul class="dropdown-menu">
             <li><a class="dropdown-item" href="#">Action</a></li>
             <li><a class="dropdown-item" href="#">Another action</a></li>
-            <li><hr class="dropdown-divider"></li>
+            <li>
+              <hr class="dropdown-divider">
+            </li>
             <li><a class="dropdown-item" href="#">Something else here</a></li>
           </ul>
         </li>
       </ul>
-      <a class="btn btn-outline-dark m-1" href="#" role="button">Login</a>
+      <div class="d-flex" id="auth-links">
+
+        {% if user %}
+        <span class="navbar-text me-2">
+          Hello, {{ user.name }}
+        </span>
+        <button id="logout-button" class="btn btn-outline-dark m-1">Logout</button>
+        {% else %}
+        <a id="login-link" class="btn btn-outline-dark m-1" href="/login" role="button">Login</a>
+        <a id="register-link" a class="btn btn-dark m-1" href="/register" role="button">Register</a>
+        {% endif %}
+
+      </div>
     </div>
   </div>
 </nav>

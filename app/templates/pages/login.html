@@ -1,0 +1,63 @@
+{% extends "layout.html" %}
+
+{% block title %}Login - DivvyUp{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6 col-lg-4">
+        <h1 class="text-center mb-4">Login</h1>
+
+        <form id="login-form">
+            <div id="error-alert" class="alert alert-danger d-none" role="alert">
+            </div>
+
+            <div class="mb-3">
+                <label for="email" class="form-label">Email address</label>
+                <input type="email" class="form-control" id="email" name="email" required>
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" class="form-control" id="password" name="password" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Login</button>
+        </form>
+        <div class="text-center mt-3">
+            <p>Don't have an account? <a href="/register">Register here</a></p>
+        </div>
+    </div>
+</div>
+<script>
+    document.getElementById('login-form').addEventListener('submit', async function (event) {
+        event.preventDefault();
+
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const errorAlert = document.getElementById('error-alert');
+
+        errorAlert.classList.add('d-none');
+        errorAlert.textContent = '';
+
+        try {
+            const response = await fetch('/token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: email,
+                    password: password
+                })
+            });
+
+            if (response.ok) {
+                window.location.href = '/';
+            } else {
+                const errorData = await response.json();
+                errorAlert.textContent = errorData.detail || 'An unknown error occurred.';
+                errorAlert.classList.remove('d-none');
+            }
+        } catch (error) {
+            errorAlert.textContent = 'Network error. Please try again.';
+            errorAlert.classList.remove('d-none');
+        }
+    });
+</script>
+{% endblock %}
