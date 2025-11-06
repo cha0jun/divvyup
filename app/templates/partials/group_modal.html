@@ -1,0 +1,62 @@
+<!-- Modal -->
+<div
+  class="modal fade"
+  id="{{ modal_id }}"
+  tabindex="-1"
+  aria-labelledby="{{ modal_id }}Label"
+  aria-hidden="true"
+>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="{{ modal_id }}Label">{{ modal_title }}</h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <form action="{{ form_action }}" method="POST">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="groupName" class="form-label">Group Name *</label>
+            <input
+              type="text"
+              class="form-control"
+              id="groupName"
+              name="name"
+              value="{{ group.name if group else '' }}"
+              required
+            />
+          </div>
+          <div class="mb-3">
+            <label for="groupDescription" class="form-label"
+              >Description (optional)</label
+            >
+            <textarea
+              class="form-control"
+              id="groupDescription"
+              name="description"
+              rows="3"
+            >
+{{ group.description if group else '' }}</textarea
+            >
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            data-bs-dismiss="modal"
+          >
+            Cancel
+          </button>
+          <button type="submit" class="btn btn-primary">
+            {{ submit_text }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

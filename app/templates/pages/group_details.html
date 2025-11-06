@@ -1,0 +1,324 @@
+{% extends "layout.html" %} {% block title %}Expense Group{% endblock %} {%
+block content %}
+<div class="container-fluid mt-4">
+  <div class="row">
+    <!-- Left Sidebar -->
+    <div class="col-md-3">
+      <!-- Group Info- Fixed Card -->
+      <div class="card mb-3">
+        <div class="card-header">
+          <h5 class="mb-0">{{ group.name }}</h5>
+        </div>
+        <div class="card-body">
+          <p class="text-muted mb-0">{{ group.description }}</p>
+        </div>
+      </div>
+
+      <!-- Accordions -->
+      <div class="accordion" id="details">
+        <!-- Members -->
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="heading-1">
+            <button
+              class="accordion-button"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#collapse-1"
+              aria-expanded="true"
+              aria-controls="collapse-1"
+            >
+              Members
+            </button>
+          </h2>
+          <div
+            id="collapse-1"
+            class="accordion-collapse collapse show"
+            aria-labelledby="heading-1"
+            data-bs-parent="#details"
+          >
+            <div class="accordion-body">
+              <ul class="list-group">
+                {% if members %} {% for member in members %}
+                <li
+                  class="list-group-item d-flex justify-content-between align-items-center"
+                >
+                  {{ member.user.name }} {% if member.added_by is none %}
+                  <span class="badge bg-primary">Admin</span>
+                  {% endif %} {% if user and user.id == member.user.id %}
+                  <span class="badge bg-info text-dark ms-2">You</span>
+                  {% endif %}
+                </li>
+                {% else %}
+                <li class="list-group-item text-muted">No members yet.</li>
+                {% endfor %} {% endif %}
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Common Actions -->
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="heading-2">
+            <button
+              class="accordion-button collapsed"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#collapse-2"
+              aria-expanded="false"
+              aria-controls="collapse-2"
+            >
+              Common Actions
+            </button>
+          </h2>
+          <div
+            id="collapse-2"
+            class="accordion-collapse collapse"
+            aria-labelledby="heading-2"
+            data-bs-parent="#details"
+          >
+            <div class="accordion-body">
+              <a href="/invitations" class="btn btn-outline-primary w-100 mb-2">
+                View Invitations
+              </a>
+              <a
+                href="/groups/{group_id}/expenses/{expense_id}/recurring"
+                class="btn btn-outline-primary w-100 mb-2"
+              >
+                View Recurring Expenses
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {% if current_member.added_by is none%}
+        <!-- Admin Tools -->
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="heading-3">
+            <button
+              class="accordion-button collapsed"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#collapse-3"
+              aria-expanded="false"
+              aria-controls="collapse-3"
+            >
+              Admin Tools
+            </button>
+          </h2>
+          <div
+            id="collapse-3"
+            class="accordion-collapse collapse"
+            aria-labelledby="heading-3"
+            data-bs-parent="#details"
+          >
+            <div class="accordion-body">
+              <button
+                type="button"
+                class="btn btn-outline-secondary w-100 mb-2"
+                data-bs-toggle="modal"
+                data-bs-target="#addMemberModal"
+              >
+                Add Member
+              </button>
+              <button
+                type="button"
+                class="btn btn-outline-secondary w-100 mb-2"
+                data-bs-toggle="modal"
+                data-bs-target="#removeMemberModal"
+              >
+                Remove Member
+              </button>
+              <button
+                type="button"
+                class="btn btn-outline-secondary w-100 mb-2"
+                data-bs-toggle="modal"
+                data-bs-target="#changeAdminModal"
+              >
+                Change Admin
+              </button>
+
+              <button
+                type="button"
+                class="btn btn-outline-secondary w-100 mb-2"
+                data-bs-toggle="modal"
+                data-bs-target="#editGroupModal"
+              >
+                Edit Group Details
+              </button>
+              <a
+                href="/groups/{{ group.id }}/view-audit"
+                class="btn btn-outline-secondary w-100 mb-2"
+                >View History</a
+              >
+              <a
+                href="/groups/{{ group.id }}/delete-group"
+                class="btn btn-outline-danger w-100 mb-2"
+                >Delete Group</a
+              >
+            </div>
+          </div>
+        </div>
+
+        {% else %}
+        <!-- Member Actions -->
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="heading-4">
+            <button
+              class="accordion-button collapsed"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#collapse-4"
+              aria-expanded="false"
+              aria-controls="collapse-4"
+            >
+              Member Actions
+            </button>
+          </h2>
+          <div
+            id="collapse-4"
+            class="accordion-collapse collapse"
+            aria-labelledby="heading-4"
+            data-bs-parent="#details"
+          >
+            <div class="accordion-body">
+              <a href="#" class="btn btn-outline-primary w-100 mb-2"
+                >Invite Member</a
+              >
+            </div>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="col-md-9">
+      <!-- Balance Summary Card -->
+      <div class="card mb-3">
+        <div class="card-header">
+          <h5 class="mb-0">Your Balance Summary</h5>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <div class="p-3 bg-light border rounded text-center">
+                <h6 class="text-muted mb-2">You Are Owed</h6>
+                <h3 class="text-success mb-0">
+                  ${{ "%.2f"|format(you_are_owed) }}
+                </h3>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="p-3 bg-light border rounded text-center">
+                <h6 class="text-muted mb-2">You Owe</h6>
+                <h3 class="text-danger mb-0">${{ "%.2f"|format(you_owe) }}</h3>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="p-3 bg-light border rounded text-center">
+                <h6 class="text-muted mb-2">Net Balance</h6>
+                <h3
+                  class="{% if net_balance > 0 %}text-success{% elif net_balance < 0 %}text-danger{% else %}text-primary{% endif %} mb-0"
+                >
+                  ${{ "%.2f"|format(net_balance) }}
+                </h3>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions Card (No Header) -->
+      <div class="card mb-3">
+        <div class="card-body">
+          <div class="d-flex flex-wrap gap-2">
+            <a href="/groups/{group_id}/expenses" class="btn btn-primary"
+              >Add Expense</a
+            >
+            <a
+              href="/groups/{group_id}/expenses/{expense_id}/recurring"
+              class="btn btn-secondary"
+              >Add Recurring Expense</a
+            >
+            <a href="#" class="btn btn-success">Settle Up</a>
+            <a
+              href="/groups/{group_id}/expenses"
+              class="btn btn-outline-primary"
+              >View All Expenses</a
+            >
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Expenses Card -->
+      <div class="card">
+        <div
+          class="card-header d-flex justify-content-between align-items-center"
+        >
+          <h5 class="mb-0">Recent Expenses</h5>
+          <a
+            href="/groups/{group_id}/expenses"
+            class="btn btn-sm btn-outline-primary"
+            >View All</a
+          >
+        </div>
+        <div class="card-body">
+          {% if expenses %}
+          <div class="list-group">
+            {% for expense in expenses[:3] %}
+            <div class="list-group-item">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <h6 class="mb-1">{{ expense.name }}</h6>
+                  {% if expense.description %}
+                  <small class="text-muted">{{ expense.description }}</small>
+                  <br />
+                  {% endif %}
+                  <small class="text-muted">
+                    Paid by {{ expense.payer_name }} • {{
+                    expense.payment_date.strftime('%b %d, %Y') }}
+                  </small>
+                </div>
+                <div class="text-end">
+                  <strong>${{ "%.2f"|format(expense.amount) }}</strong>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <p class="text-muted mb-0">
+            No expenses yet. Add your first expense to get started!
+          </p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal with edit group parameters -->
+<!--form send to '/groups/{group_id}/update'-->
+{% set modal_id = 'editGroupModal' %} {% set modal_title = 'Edit Group Details'
+%} {% set form_action = '/groups/' ~ group.id ~ '/update' %} {% set submit_text
+= 'Save Changes' %} {% include 'partials/group_modal.html' %}
+
+<!-- Add Member modal -->
+{% set modal_id = 'addMemberModal' %} {% set modal_title = 'Add Member' %} {%
+set form_action = '/groups/' ~ group.id ~ '/add_member' %} {% set input_id =
+'userId' %} {% set input_name = 'user_id' %} {% set input_label = 'User ID' %}
+{% set submit_text = 'Add Member' %} {% include 'partials/_member_modal.html' %}
+
+<!-- Remove Member modal -->
+{% set modal_id = 'removeMemberModal' %} {% set modal_title = 'Remove Member' %}
+{% set form_action = '/groups/' ~ group.id ~ '/remove_member' %} {% set input_id
+= 'memberId' %} {% set input_name = 'member_id' %} {% set input_label = 'Member
+ID' %} {% set submit_text = 'Remove Member' %} {% include
+'partials/_member_modal.html' %}
+
+<!-- Change Admin modal -->
+{% set modal_id = 'changeAdminModal' %} {% set modal_title = 'Change Admin' %}
+{% set form_action = '/groups/' ~ group.id ~ '/change_admin' %} {% set input_id
+= 'newAdminId' %} {% set input_name = 'new_admin_id' %} {% set input_label =
+'New Admin User ID' %} {% set submit_text = 'Change Admin' %} {% include
+'partials/_member_modal.html' %} {% endblock %}

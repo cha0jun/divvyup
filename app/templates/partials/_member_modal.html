@@ -1,0 +1,42 @@
+<div
+  class="modal fade"
+  id="{{ modal_id }}"
+  tabindex="-1"
+  aria-labelledby="{{ modal_id }}Label"
+  aria-hidden="true"
+>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form action="{{ form_action }}" method="POST">
+        <div class="modal-header">
+          <h5 class="modal-title" id="{{ modal_id }}Label">
+            {{ modal_title }}
+          </h5>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+            aria-label="Close"
+          ></button>
+        </div>
+        <div class="modal-body">
+          <label for="{{ input_id }}" class="form-label"
+            >{{ input_label }}</label
+          >
+          <input
+            type="text"
+            class="form-control"
+            id="{{ input_id }}"
+            name="{{ input_name }}"
+            required
+          />
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">
+            {{ submit_text }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

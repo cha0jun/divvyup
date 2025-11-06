@@ -198,8 +198,7 @@ def get_expense(db: Session, expense_id:int ) -> Expense:
 
 def get_expenses_by_group_id(db: Session, group_id:int) -> List[Expense]:
     return db.exec(
-        select(Expense).where(Expense.expense_group_id == group_id)
-    )
+        select(Expense).where(Expense.expense_group_id == group_id)).all()
     
 def get_expense_by_group_id(db: Session, group_id:int) -> List[Expense]:
     return db.exec(
