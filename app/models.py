@@ -32,6 +32,17 @@ class User(SQLModel, table=True):
         back_populates="invitee",
         sa_relationship_kwargs={"foreign_keys": "[Invitation.invitee_id]"}
     )
+    
+    debts: "Breakdown" = Relationship(
+        back_populates="debtor",
+        sa_relationship_kwargs={"foreign_keys": "[Breakdown.debtor_id]"}
+    )
+    
+    paid_for: "Expense" = Relationship(
+        back_populates="payer",
+        sa_relationship_kwargs={"foreign_keys": "[Expense.payer_id]"}
+    )
+    
 
 class ExpenseGroup(SQLModel, table=True):
     __tablename__ = "expense_group"
@@ -101,7 +112,8 @@ class Expense(SQLModel, table=True):
         default_factory=lambda: datetime.now(timezone.utc),
         sa_column=Column(DateTime, nullable=False)
     )
-
+    
+    payer: User = Relationship(back_populates="paid_for", sa_relationship_kwargs={"foreign_keys": "[Expense.payer_id]"})
     group: ExpenseGroup = Relationship(back_populates="expenses")
     breakdowns: List["Breakdown"] = Relationship(
     back_populates="expense",
@@ -131,6 +143,10 @@ class Breakdown(SQLModel, table = True):
     )
     
     expense: Optional["Expense"] = Relationship(back_populates="breakdowns")
+    debtor: "User" = Relationship(
+        back_populates="debts",
+        sa_relationship_kwargs={"foreign_keys": "[Breakdown.debtor_id]"}
+    )
 
 
 class RecurringExpense(SQLModel, table=True):

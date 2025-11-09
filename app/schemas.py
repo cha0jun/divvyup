@@ -88,7 +88,7 @@ class BreakdownUpdate(BaseModel):
 class BreakdownRead(BreakdownBase):
     id: int
     expense_id: int
-    
+    debtor: UserRead
     model_config = ConfigDict(from_attributes=True)
 
 # ---------Expense Schemas--------
@@ -131,6 +131,7 @@ class ExpenseUpdate(BaseModel):
 class ExpenseRead(ExpenseBase):
     id: int
     expense_group_id: int
+    payer: UserRead
     breakdowns: List[BreakdownRead] = []
 
     model_config = ConfigDict(from_attributes=True)

@@ -8,62 +8,151 @@
 
   <div class="container mt-5">
     <!-- Page Title -->
-    <h1 class="mb-4">Expense Title</h1>
+    <h1 class="mb-4">Expenses</h1>
 
     <!-- Table Listing -->
   <div class="border rounded-3 overflow-hidden mb-4">   
     <div class="table-responsive">
-      <table class="table table-light table-hover mb-0">
+      <table class="table table-light mb-0">
         <thead>
           <tr>
-            <th scope="col">Expense Name</th>
-            <th scope="col">Amount</th>
-            <th scope="col">Payer</th>
-            <th scope="col">Date Created</th>
-            <th scope="col">Summary</th>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Amount</th>
+            <th>Paid By</th>
+            <th>Payment Date</th>
+            <th></th>
           </tr>
         </thead>
-        <tbody>
-          <tr>
-            <td scope="row">Mark</td>
-            <td>Otto</td>
-            <td>mark.otto@example.com</td>
-            <td>Admin</td>
-            <td></td>
-          </tr>
-          <tr>
-            <td scope="row">Jacob</td>
-            <td>Thornton</td>
-            <td>jacob.thornton@example.com</td>
-            <td>User</td>
-            <td></td>
-          </tr>
-          <tr>
-            <td scope="row">Larry</td>
-            <td>the Bird</td>
-            <td>larry.bird@example.com</td>
-            <td>User</td>
-          </tr>
-          <tr>
-            <th scope="row">4</th>
-            <td>Jennifer</td>
-            <td>Wilson</td>
-            <td>jennifer.wilson@example.com</td>
-            <td>Editor</td>
-          </tr>
-          <tr>
-            <th scope="row">5</th>
-            <td>David</td>
-            <td>Miller</td>
-            <td>david.miller@example.com</td>
-            <td>User</td>
-          </tr>
+        <tbody id="table-body">
         </tbody>
       </table>
     </div>
 </div>
-    <!-- Pagination -->
-    {% include "partials/_pagination.html" %}
+</div>
+<!-- Modal -->
+<div class="modal fade" id="detModal" tabindex="-1" aria-labelledby="expDet" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      {% include 'partials/_exp_det_card.html' %}
+    </div>
   </div>
+</div>
+<script>
+// This variable will hold our fetched data so other functions can access it.
+let allExpensesData = [];
+
+// Get the group_id from the Jinja2 template
+const groupId = "{{ group_id }}";
+//const modalId = "detModal"; // The ID we gave our macro instance
+
+document.addEventListener('DOMContentLoaded', () => {
+  const dataContainer = document.getElementById('table-body');
+  
+  // Set up the event listener for the view details buttons
+  dataContainer.addEventListener('click', handleViewDetailsClick);
+
+  async function fetchData() {
+    try {
+      const response = await fetch(`/groups/${groupId}/expenses`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const res = await response.json();
+      allExpensesData = res; 
+      displayData(res);
+    } catch (error) {
+      displayError(error);
+    }
+  }
+
+  function displayData(expenses) {
+    let content = '';
+    if (expenses.length === 0) {
+      content = '<tr><td colspan="6" class="text-center">No expenses found.</td></tr>';
+      dataContainer.innerHTML = content;
+      return;
+    }
+
+    for (const exp of expenses) {
+      content += `
+        <tr class="align-baseline">
+          <td>${exp.name}</td>
+          <td class='text-truncate'>${exp.description || 'N/A'}</td>
+          <td>$${exp.amount.toFixed(2)}</td>
+          <td>${exp.payer.name}</td>
+          <td>${new Date(exp.payment_date).toLocaleDateString()}</td>
+          <td>
+            <button class="btn btn-dark view-details-btn" 
+                    data-bs-toggle="modal" 
+                    data-bs-target="#detModal"
+                    data-expense-id="${exp.id}">
+              View Details
+            </button>
+          </td>
+        </tr>
+      `;
+    }
+    dataContainer.innerHTML = content;
+  }
+
+  function handleViewDetailsClick(event) {
+    const clickedButton = event.target.closest('.view-details-btn');
+    if (clickedButton) {
+      const expenseId = clickedButton.dataset.expenseId;
+      const selectedExpense = allExpensesData.find(exp => exp.id.toString() === expenseId);
+      if (selectedExpense) {
+        // This is the updated function call
+        populateModalFromMacro(selectedExpense);
+      }
+    }
+  }
+
+  // --- UPDATED FUNCTION TO POPULATE THE RENDERED MACRO ---
+  function populateModalFromMacro(expenseObject) {
+    const bdlist = document.getElementById('modal-bdlist');
+    bdlist.innerHTML = ''
+
+    document.getElementById(`modal-name`).textContent = expenseObject.name;
+    document.getElementById(`modal-desc`).textContent = expenseObject.description || 'N/A';
+    document.getElementById(`modal-amt`).textContent = '$'+ expenseObject.amount.toFixed(2);
+    document.getElementById(`modal-payer`).textContent = expenseObject.payer.name;
+    document.getElementById(`modal-paid-on`).textContent = new Date(expenseObject.payment_date).toLocaleDateString();
+    //build bd list
+    for (const bd of expenseObject.breakdowns) {
+      const listItem = document.createElement('li');
+      listItem.className = "d-flex align-items-center mb-3";
+
+      const nameCont = document.createElement('div');
+      nameCont.className = "fw-medium flex-grow-1";
+      nameCont.innerText = bd.debtor.name;
+      listItem.appendChild(nameCont)
+
+      const amtCont = document.createElement('div');
+      amtCont.className = "fw-medium me-3";
+      amtCont.innerText = "$" + bd.amount;
+      listItem.appendChild(amtCont);
+
+      bdlist.appendChild(listItem);
+      
+    }
+
+
+    // You can also dynamically update links, like an "Edit" button
+    const editButton = document.getElementById(`modal-edit`);
+    if (editButton) {
+      // Example: Set the href to an edit page for this specific expense
+      editButton.href = `/groups/${groupId}/expenses/${expenseObject.id}/edit`;
+    }
+}
+
+  function displayError(error) {
+    console.error(`An error occurred: ${error.message}`);
+    dataContainer.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Failed to load data.</td></tr>';
+  }
+
+  fetchData();
+});
+</script>
 
 {% endblock %}

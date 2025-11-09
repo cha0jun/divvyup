@@ -1,9 +1,9 @@
 from fastapi import APIRouter, status
-from schemas import *
-from database import *
-from auth import UserDep
-from crud import *
-from services import *
+from ..schemas import *
+from ..database import *
+from ..auth import UserDep
+from ..crud import *
+from ..services import *
 
 router = APIRouter(
     tags= ['expenses']
@@ -107,6 +107,13 @@ def delete_expense_bl(group_id:int, expense_id:int, db: SessionDep, current_user
 # @app.post("/groups/{group_id}/expenses/{expense_id}/breakdowns"_)
 # def add_breakdown():
 #     pass
+
+@router.get("/group/{group_id}/expense/{expense_id}/breakdown", response_model=BreakdownRead)
+def get_breakdown(expense_id:int, group_id:int, db:SessionDep, current_user: UserDep):
+    validate_expense_group(db, group_id, "Expense group not found.")
+    validate_group_member(db, current_user.id, group_id, "Only members can view recurring expenses")
+    res = get_breakdown_by_expense_id(db, expense_id)
+    return res
 
 
 #------Recurring Expense Routes-------

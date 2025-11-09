@@ -39,13 +39,6 @@ async def read_root(request: Request, user: UserOptional):
         {"request": request, "user": user} 
     )
 
-@app.get("/expenses", response_class=HTMLResponse)
-async def read_root(request: Request, user: UserOptional): 
-    return templates.TemplateResponse(
-        "pages/expense.html", 
-        {"request": request, "user": user} 
-    )
-
 @app.get("/login", response_class=HTMLResponse)
 async def get_login_page(request: Request, user: UserOptional):
     return templates.TemplateResponse(
@@ -60,7 +53,7 @@ async def get_register_page(request: Request, user: UserOptional):
         {"request": request, "user": user} 
     )
 
-
+## Groups ##
 ## TEMPORARY: Using CRUD functions to test routes and templates.
 # Proper backend integration will be implemented later.
 @app.get("/expense_groups", response_class=HTMLResponse)
@@ -95,3 +88,18 @@ async def get_register_page(request: Request, user: UserOptional, group_id: int,
         "net_balance": 55.00,
         "active_page": "group_details"
     })
+    
+## Expense
+@app.get("/group/{group_id}/expenses", response_class=HTMLResponse)
+async def read_root(request: Request, user: UserOptional, group_id:int):
+    return templates.TemplateResponse(
+        "pages/expense.html", 
+        {"request": request, "user": user, "group_id":group_id} 
+    )
+
+@app.get("/expenses/{expense_id}", response_class=HTMLResponse)
+async def read_root(request: Request, user: UserOptional, expense_id:int):
+    return templates.TemplateResponse(
+        "pages/expense_detail.html", 
+        {"request": request, "user": user, "expense_id":expense_id} 
+    )
