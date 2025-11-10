@@ -69,8 +69,11 @@ def create_member(db: Session, user_to_add: User, group_id: int, added_by_user_i
     db.refresh(member, ["user"])
     return member
 
-def remove_member_from_group(db: Session, member_id: int)-> Member:
-    db_member = get_member_by_member_id(db,member_id)
+
+def remove_member_from_group(db: Session, db_member: Member):
+    """
+    Deletes a given Member object from the database and commits the session.
+    """
     db.delete(db_member)
     db.commit()
 
@@ -148,17 +151,20 @@ def update_expense_group(db: Session, group_id: int, group_update: ExpenseGroupU
     if not db_group:
         raise HTTPException(status_code=404, detail="Expense group not found")
     
-    if group_update.name is not None:
-        db_group.name = group_update.name
-    if group_update.description is not None:
-        db_group.description = group_update.description
+    if group_update.name:
+        db_group.name = group_update.name.strip()
+
+    if group_update.description:
+        db_group.description = group_update.description.strip()
 
     db_group.modified_by = modifier.id
     db_group.modified_on = datetime.now()
+    db.add(db_group)
     
     db.commit()
     db.refresh(db_group)
     return db_group
+
 
 def transfer_admin_rights(db: Session, group_id: int, new_admin_user_id: int, modifier: User) -> ExpenseGroup:
     db_group = get_expense_group(db, group_id)

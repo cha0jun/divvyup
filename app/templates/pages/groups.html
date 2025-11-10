@@ -10,119 +10,45 @@
             <h1>My Groups</h1>
             <p class="text-muted">Manage your expense groups</p>
         </div>
-{% if groups %}
         <div class="col-auto">
-            <a href="#" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createGroupModal">+ Create New Group</a>
+            <a href="#" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createGroupModal">
+                + Create New Group
+            </a>
         </div>
     </div>
 
-    <!-- Groups Grid -->
+    <!-- Groups Grid - JavaScript will populate this -->
     <div class="row g-4" id="groupsContainer">
-        <!-- show only first 3 groups initially -->
-        {% for group in groups[:3]%}
-        <div class="col-md-4">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title">{{group.name}}</h5>
-                    <p class="card-text text-muted">{{group.description}}</p>
-                    <div class="mb-3">
-                        <a href="/groups/{{ group.id }}/members" class="text-decoration-none">
-                            <span class="badge bg-secondary me-1">Members</span>
-                        </a>
-                        <a href="/groups/{{ group.id }}/expenses" class="text-decoration-none">
-                            <span class="badge bg-info">Expenses</span>
-                        </a>
-                    </div>
-                    <p class="text-muted small mb-0">
-                        <i class="bi bi-calendar"></i> Created: {{group.created_on}}
-                    </p>
-                    <p class="text-muted small">
-                        <i class="bi bi-person"></i> Admin: {{group.created_by}}
-                    </p>
-                </div>
-                <div class="card-footer bg-white border-top">
-                    <a href="/expense_groups/{{ group.id }}" class="btn btn-primary btn-sm">View Group</a>
-                </div>
+        <!-- Loading state -->
+        <div class="col-12 text-center" id="loadingState">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
             </div>
+            <p class="mt-2 text-muted">Loading your groups...</p>
         </div>
-        {% endfor %}
- 
-        <!-- Hidden groups (shown when Load More is clicked) -->
-        {% for group in groups[3:] %}
-        <div class="col-md-4 hidden-group" style="display: none;">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title">{{group.name}}</h5>
-                    <p class="card-text text-muted">{{group.description}}</p>
-                    <div class="mb-3">
-                        <a href="/groups/{{ group.id }}/members" class="text-decoration-none">
-                            <span class="badge bg-secondary me-1">Members</span>
-                        </a>
-                        <a href="/groups/{{ group.id }}/expenses" class="text-decoration-none">
-                            <span class="badge bg-info">Expenses</span>
-                        </a>
-                    </div>
-                    <p class="text-muted small mb-0">
-                        <i class="bi bi-calendar"></i> Created: {{group.created_on}}
-                    </p>
-                    <p class="text-muted small">
-                        <i class="bi bi-person"></i> Admin: {{group.created_by}}
-                    </p>
-                </div>
-                <div class="card-footer bg-white border-top">
-                    <a href="/groups/{{ group.id }}" class="btn btn-primary btn-sm">View Group</a>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
-    
-        <!-- Load More Button (only show if there are more than 3 groups) -->
-         {% if groups|length > 3 %}
-         <div class="text-center mt-3">
-            <button id="loadMoreBtn" class="btn btn-secondary" onclick="loadMoreGroups()">
-                Load More Groups
-            </button>
-        </div>
-        {% endif %}
     </div>
-  {% else %}
-        <div class="col-12 text-center text-muted">
-            <p>You are not logged in or have no groups.</p>
-            <a href="/login" class="btn btn-primary">Login to see your groups</a>
-        </div>
-    {% endif %}
-    <script>
-    function loadMoreGroups() {
-        const hiddenGroups = document.querySelectorAll('.hidden-group');
-        hiddenGroups.forEach(group => {
-            group.style.display = 'block';
-        });
 
-        // Hide the Load More button after clicking
-        document.getElementById('loadMoreBtn').style.display = 'none';
-    }
-    </script>
-
-        <!-- Empty State Example (when no groups) -->
-        <!-- Uncomment this and comment out cards above to show empty state
-        <div class="col-12">
-            <div class="alert alert-info text-center" role="alert">
-                <h4 class="alert-heading">No groups yet!</h4>
-                <p>You haven't joined or created any expense groups.</p>
-                <hr>
-                <a href="/groups/create" class="btn btn-primary">Create Your First Group</a>
-            </div>
-        </div>
-        -->
+    <!-- Load More Button Container -->
+    <div class="text-center mt-3" id="loadMoreContainer" style="display: none;">
+        <button id="loadMoreBtn" class="btn btn-secondary">
+            Load More Groups
+        </button>
+        <p class="text-muted small mt-2" id="loadMoreInfo"></p>
     </div>
 </div>
 
-<!-- Include the modal with create group parameters -->
+<!-- Include the modal -->
 {% set modal_id = 'createGroupModal' %}
 {% set modal_title = 'Create New Group' %}
 {% set form_action = '/groups/create' %}
 {% set submit_text = 'Create Group' %}
 
 {% include 'partials/group_modal.html' %}
-{% endblock %}
 
+
+
+<script src="{{ url_for('static', path='/js/groups.js') }}"></script>
+
+
+
+{% endblock %}

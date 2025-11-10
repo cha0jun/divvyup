@@ -24,9 +24,9 @@ app.include_router(group.router)
 app.include_router(invitation.router)
 app.include_router(user.router)
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
-templates = Jinja2Templates(directory="templates")
+templates = Jinja2Templates(directory="app/templates")
 
 UserOptional = Annotated[User | None, Depends(get_current_user_optional)]
 
@@ -53,10 +53,9 @@ async def get_register_page(request: Request, user: UserOptional):
         {"request": request, "user": user} 
     )
 
-## Groups ##
-## TEMPORARY: Using CRUD functions to test routes and templates.
-# Proper backend integration will be implemented later.
-@app.get("/expense_groups", response_class=HTMLResponse)
+
+#----------GROUP--------------
+@app.get("/groups", response_class=HTMLResponse)
 async def groups_page(request: Request, user: UserOptional,  db: SessionDep):
     groups = get_groups_for_user(db, user.id) if user else []
 
@@ -66,31 +65,13 @@ async def groups_page(request: Request, user: UserOptional,  db: SessionDep):
         "active_page": "groups"
     })
 
-@app.get("/expense_groups/{group_id}",response_class=HTMLResponse)
-async def get_register_page(request: Request, user: UserOptional, group_id: int, db: SessionDep):
-    group = get_expense_group(db, group_id)
-    members = get_group_members(db, group_id)
-    expenses = get_expenses_by_group_id(db, group_id)
-
-    if user is not None:
-        current_member = get_member(db, user_id=user.id, group_id=group_id)
-    else:
-        current_member = None
-
-    return templates.TemplateResponse("pages/group_details.html", {
-        "request": request,
-        "group": group,
-        "members": members,
-        "expenses": expenses,
-        "current_member": current_member,
-        "you_are_owed": 105.00,
-        "you_owe": 50.00,
-        "net_balance": 55.00,
-        "active_page": "group_details"
-    })
-    
+@app.get("/groups/{group_id}",response_class=HTMLResponse)
+async def get_group_detail(request: Request, user: UserOptional, group_id: int, db: SessionDep):
+    return templates.TemplateResponse("pages/group_details.html",
+        {"request": request, "user": user, "group_id": group_id})
+      
 ## Expense
-@app.get("/group/{group_id}/expenses", response_class=HTMLResponse)
+@app.get("/groups/{group_id}/expenses", response_class=HTMLResponse)
 async def read_root(request: Request, user: UserOptional, group_id:int):
     return templates.TemplateResponse(
         "pages/expense.html", 
