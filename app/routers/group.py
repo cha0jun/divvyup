@@ -6,7 +6,7 @@ from ..crud import *
 from ..services import *
 
 router = APIRouter(
-    prefix="/api/groups",  # Add prefix here!
+    prefix="/api/groups", 
     tags=["groups"]
 )
 

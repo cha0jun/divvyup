@@ -5,7 +5,7 @@ from fastapi.templating import Jinja2Templates
 from typing import Annotated
 from .database import engine
 from sqlmodel import SQLModel
-from .routers import expense, group, invitation, user
+from .routers import expense, group, invitation, user, payment
 from .models import User
 from .auth import get_current_user_optional
 from .crud import *
@@ -23,6 +23,7 @@ app.include_router(expense.router)
 app.include_router(group.router)
 app.include_router(invitation.router)
 app.include_router(user.router)
+app.include_router(payment.router)
 
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
