@@ -143,6 +143,34 @@ async function fetchRecentExpenses() {
     }
 }
 
+// Fetch Pending Invites ---
+async function fetchPendingInvites() {
+    try {
+        const response = await fetch(`/api/groups/${window.GROUP_ID}/invitations`, {
+            credentials: 'include',
+        });
+
+        // Handle 404 (Not Found) or 403 (Forbidden)
+        if (response.status === 404 || response.status === 403) {
+            console.log("No pending invites found or user not authorized to view them.");
+            pendingInvitesData = []; // Set global data to empty
+            return []; // Return empty array to Promise.all
+        }
+        
+        // Handle other non-ok errors
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        pendingInvitesData = await response.json();
+        return pendingInvitesData;
+
+    } catch (error) {
+        console.error('Error fetching pending invites:', error);
+        pendingInvitesData = []; // Set global data to empty
+        return []; // Return an empty array on any error
+    }
+}
 // Display group info
 function displayGroupInfo() {
     document.getElementById('groupName').textContent = groupData.name;
@@ -253,6 +281,40 @@ function displayRecentExpenses() {
     recentExpensesList.innerHTML = `<div class="list-group">${expensesHTML}</div>`;
 }
 
+// Display Pending Invites ---
+function displayPendingInvites() {
+    const invitesList = document.getElementById('pendingInvitesList');
+    const invitesCountBadge = document.getElementById('pendingInvitesCount'); // Get the badge
+
+    if (!pendingInvitesData || pendingInvitesData.length === 0) {
+        invitesList.innerHTML = '<li class="list-group-item text-muted">No pending invitations.</li>';
+        invitesCountBadge.textContent = '0'; // Set count to 0
+        return;
+    }
+
+    // Update badge count
+    invitesCountBadge.textContent = pendingInvitesData.length;
+
+    invitesList.innerHTML = pendingInvitesData.map(inv => `
+        <li class="list-group-item d-flex justify-content-between align-items-center" 
+            data-invitation-id="${inv.id}">
+            <div>
+                <span class="fw-bold">${escapeHtml(inv.invitee.name)}</span>
+                <small class="text-muted d-block">${escapeHtml(inv.invitee.email)}</small>
+            </div>
+            ${(window.CURRENT_USER === groupData.admin_id || window.CURRENT_USER === inv.inviter.id) ? 
+            `<button class="btn btn-outline-danger btn-sm cancel-invite-btn" data-id="${inv.id}">
+                Cancel
+            </button>` : ''}
+        </li>
+    `).join('');
+
+    // Add click listener for the cancel buttons
+    invitesList.querySelectorAll('.cancel-invite-btn').forEach(button => {
+        button.addEventListener('click', handleCancelInvitation);
+    });
+}
+
 // Show/hide admin tools based on user role
 function setupUserPermissions() {
     const isAdmin = currentMember && currentMember.user.id === groupData.admin_id;
@@ -290,7 +352,8 @@ async function initializePage() {
             fetchGroupDetails(),
             fetchGroupMembers(),
             fetchGroupBalances(),
-            fetchRecentExpenses()
+            fetchRecentExpenses(),
+            fetchPendingInvites()
         ]);
 
         // Display all data
@@ -298,6 +361,7 @@ async function initializePage() {
         displayMembers();
         displayBalances();
         displayRecentExpenses();
+        displayPendingInvites();
         setupUserPermissions();
         updateLinks();
 
@@ -391,6 +455,102 @@ async function handleRemoveMember(event) {
     } finally {
         submitButton.disabled = false;
         submitButton.innerHTML = originalButtonText;
+    }
+}
+
+// CODE TO HANDLE INVITE MEMBER FORM ---
+async function handleInviteMember(event) {
+    event.preventDefault();
+    const form = event.target;
+    const submitButton = form.querySelector('button[type="submit"]');
+    const originalButtonText = submitButton.innerHTML;
+
+    submitButton.disabled = true;
+    submitButton.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Sending...';
+
+    const email = document.getElementById('inviteMemberEmailInput').value;
+
+    try {
+        const response = await fetch(`/api/groups/${window.GROUP_ID}/invitations`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ invitee_email: email })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.detail || 'Failed to send invitation');
+        }
+
+        alert('Invitation sent successfully!');
+        
+        // Refresh pending invites list
+        await fetchPendingInvites();
+        displayPendingInvites();
+        
+        // Hide the modal
+        const modalEl = document.getElementById('inviteMemberModal');
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        modal.hide();
+        form.reset(); // Clear the form
+
+    } catch (error) {
+        console.error('Error sending invite:', error);
+        alert(`Error: ${error.message}`);
+    } finally {
+        submitButton.disabled = false;
+        submitButton.innerHTML = originalButtonText;
+    }
+}
+
+// --- NEW: Handle Cancel Invitation ---
+async function handleCancelInvitation(event) {
+    const button = event.target;
+    const invitationId = button.dataset.id;
+    
+    if (!confirm('Are you sure you want to cancel this invitation?')) {
+        return;
+    }
+
+    button.disabled = true;
+    button.textContent = 'Canceling...';
+
+    try {
+        const response = await fetch(`/invitations/${invitationId}`, {
+            method: 'DELETE',
+            credentials: 'include',
+        });
+
+        if (response.status === 204) {
+            // Success, no content
+            alert('Invitation canceled.');
+            // Remove the item from the list
+            const listItem = button.closest('li');
+            listItem.parentNode.removeChild(listItem);
+            
+            // Check if list is now empty
+            const list = document.getElementById('pendingInvitesList');
+            if (list.children.length === 0) {
+                 list.innerHTML = 
+                    '<li class="list-group-item text-muted">No pending invitations.</li>';
+                // Update badge
+                document.getElementById('pendingInvitesCount').textContent = '0';
+            } else {
+                // Update badge
+                document.getElementById('pendingInvitesCount').textContent = list.children.length;
+            }
+        } else {
+             const result = await response.json();
+             throw new Error(result.detail || 'Failed to cancel invitation');
+        }
+
+    } catch (error) {
+        console.error('Error canceling invitation:', error);
+        alert(`Error: ${error.message}`);
+        button.disabled = false;
+        button.textContent = 'Cancel';
     }
 }
 

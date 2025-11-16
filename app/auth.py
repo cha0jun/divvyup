@@ -6,10 +6,10 @@ from jose import JWTError, jwt
 from typing import Annotated, Optional
 import uuid
 
-from .crud import get_user_by_email, is_token_blocked
-from .database import SessionDep
-from .models import User
-from .security import verify_password
+from crud import get_user_by_email, is_token_blocked
+from database import SessionDep
+from models import User
+from security import verify_password
 
 
 load_dotenv()

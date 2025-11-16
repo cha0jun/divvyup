@@ -1,5 +1,5 @@
-{% extends "layout.html" %} 
-{% block title %}Expense Group{% endblock %} 
+{% extends "layout.html" %}
+{% block title %}Expense Group{% endblock %}
 {% block content %}
 
 <!-- Loading State -->
@@ -42,23 +42,13 @@
         <!-- Members -->
         <div class="accordion-item">
           <h2 class="accordion-header" id="heading-1">
-            <button
-              class="accordion-button"
-              type="button"
-              data-bs-toggle="collapse"
-              data-bs-target="#collapse-1"
-              aria-expanded="true"
-              aria-controls="collapse-1"
-            >
+            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-1"
+              aria-expanded="true" aria-controls="collapse-1">
               Members
             </button>
           </h2>
-          <div
-            id="collapse-1"
-            class="accordion-collapse collapse show"
-            aria-labelledby="heading-1"
-            data-bs-parent="#details"
-          >
+          <div id="collapse-1" class="accordion-collapse collapse show" aria-labelledby="heading-1"
+            data-bs-parent="#details">
             <div class="accordion-body">
               <ul class="list-group" id="membersList">
                 <!-- Members populated by JS -->
@@ -67,35 +57,35 @@
           </div>
         </div>
 
+        <!-- Pending Invitations -->
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="heading-invites">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+              data-bs-target="#collapse-invites" aria-expanded="false" aria-controls="collapse-invites">
+              Pending Invitations <span class="badge bg-secondary ms-2" id="pendingInvitesCount"></span>
+            </button>
+          </h2>
+          <div id="collapse-invites" class="accordion-collapse collapse" aria-labelledby="heading-invites"
+            data-bs-parent="#details">
+            <div class="accordion-body">
+              <ul class="list-group" id="pendingInvitesList">
+              </ul>
+            </div>
+          </div>
+        </div>
+
         <!-- Common Actions -->
         <div class="accordion-item">
           <h2 class="accordion-header" id="heading-2">
-            <button
-              class="accordion-button collapsed"
-              type="button"
-              data-bs-toggle="collapse"
-              data-bs-target="#collapse-2"
-              aria-expanded="false"
-              aria-controls="collapse-2"
-            >
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+              data-bs-target="#collapse-2" aria-expanded="false" aria-controls="collapse-2">
               Common Actions
             </button>
           </h2>
-          <div
-            id="collapse-2"
-            class="accordion-collapse collapse"
-            aria-labelledby="heading-2"
-            data-bs-parent="#details"
-          >
+          <div id="collapse-2" class="accordion-collapse collapse" aria-labelledby="heading-2"
+            data-bs-parent="#details">
             <div class="accordion-body">
-              <a href="/invitations" class="btn btn-outline-primary w-100 mb-2">
-                View Invitations
-              </a>
-              <a
-                href="#"
-                id="recurringExpensesLink"
-                class="btn btn-outline-primary w-100 mb-2"
-              >
+              <a href="#" id="recurringExpensesLink" class="btn btn-outline-primary w-100 mb-2">
                 View Recurring Expenses
               </a>
             </div>
@@ -105,96 +95,51 @@
         <!-- Admin Tools (conditionally shown) -->
         <div class="accordion-item" id="adminToolsAccordion" style="display: none;">
           <h2 class="accordion-header" id="heading-3">
-            <button
-              class="accordion-button collapsed"
-              type="button"
-              data-bs-toggle="collapse"
-              data-bs-target="#collapse-3"
-              aria-expanded="false"
-              aria-controls="collapse-3"
-            >
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+              data-bs-target="#collapse-3" aria-expanded="false" aria-controls="collapse-3">
               Admin Tools
             </button>
           </h2>
-          <div
-            id="collapse-3"
-            class="accordion-collapse collapse"
-            aria-labelledby="heading-3"
-            data-bs-parent="#details"
-          >
+          <div id="collapse-3" class="accordion-collapse collapse" aria-labelledby="heading-3"
+            data-bs-parent="#details">
             <div class="accordion-body">
-              <button
-                type="button"
-                class="btn btn-outline-secondary w-100 mb-2"
-                data-bs-toggle="modal"
-                data-bs-target="#addMemberModal"
-              >
+              <button type="button" class="btn btn-outline-secondary w-100 mb-2" data-bs-toggle="modal"
+                data-bs-target="#addMemberModal">
                 Add Member
               </button>
-              <button
-                type="button"
-                class="btn btn-outline-secondary w-100 mb-2"
-                data-bs-toggle="modal"
-                data-bs-target="#removeMemberModal"
-              >
+              <button type="button" class="btn btn-outline-secondary w-100 mb-2" data-bs-toggle="modal"
+                data-bs-target="#removeMemberModal">
                 Remove Member
               </button>
-              <button
-                type="button"
-                class="btn btn-outline-secondary w-100 mb-2"
-                data-bs-toggle="modal"
-                data-bs-target="#changeAdminModal"
-              >
+              <button type="button" class="btn btn-outline-secondary w-100 mb-2" data-bs-toggle="modal"
+                data-bs-target="#changeAdminModal">
                 Change Admin
               </button>
-              <button
-                type="button"
-                class="btn btn-outline-secondary w-100 mb-2"
-                data-bs-toggle="modal"
-                data-bs-target="#editGroupModal"
-              >
+              <button type="button" class="btn btn-outline-secondary w-100 mb-2" data-bs-toggle="modal"
+                data-bs-target="#editGroupModal">
                 Edit Group Details
               </button>
-              <a
-                href="#"
-                id="viewHistoryLink"
-                class="btn btn-outline-secondary w-100 mb-2"
-                >View History</a
-              >
-              <a
-                href="#"
-                id="deleteGroupLink"
-                class="btn btn-outline-danger w-100 mb-2"
-                >Delete Group</a
-              >
+              <a href="#" id="viewHistoryLink" class="btn btn-outline-secondary w-100 mb-2">View History</a>
+              <a href="#" id="deleteGroupLink" class="btn btn-outline-danger w-100 mb-2">Delete Group</a>
             </div>
           </div>
         </div>
 
-        
+
         <div class="accordion-item" id="memberActionsAccordion" style="display: none;">
           <h2 class="accordion-header" id="heading-4">
-            <button
-              class="accordion-button collapsed"
-              type="button"
-              data-bs-toggle="collapse"
-              data-bs-target="#collapse-4"
-              aria-expanded="false"
-              aria-controls="collapse-4"
-            >
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+              data-bs-target="#collapse-4" aria-expanded="false" aria-controls="collapse-4">
               Member Actions
             </button>
           </h2>
-          <div
-            id="collapse-4"
-            class="accordion-collapse collapse"
-            aria-labelledby="heading-4"
-            data-bs-parent="#details"
-          >
+          <div id="collapse-4" class="accordion-collapse collapse" aria-labelledby="heading-4"
+            data-bs-parent="#details">
             <div class="accordion-body">
-              <a href="#" class="btn btn-outline-primary w-100 mb-2"
-                >Invite Member</a
-              >
+              <button type="button" class="btn btn-outline-primary w-100 mb-2" data-bs-toggle="modal"
+                data-bs-target="#inviteMemberModal">
+                Invite Member
+              </button>
             </div>
           </div>
         </div>
@@ -267,43 +212,50 @@
 {% include 'partials/_group_edit_modal.html' %}
 
 
-{% set modal_id = 'addMemberModal' %} 
-{% set modal_title = 'Add Member' %} 
-{% set form_action = '' %} 
-{% set input_id = 'addMemberEmailInput' %} 
-{% set input_name = 'email' %} 
-{% set input_label = 'User Email' %} 
-{% set submit_text = 'Add Member' %} 
+{% set modal_id = 'addMemberModal' %}
+{% set modal_title = 'Add Member' %}
+{% set form_action = '' %}
+{% set input_id = 'addMemberEmailInput' %}
+{% set input_name = 'email' %}
+{% set input_label = 'User Email' %}
+{% set submit_text = 'Add Member' %}
 {% include 'partials/_member_modal.html' %}
 
-{% set modal_id = 'removeMemberModal' %} 
+{% set modal_id = 'removeMemberModal' %}
 {% set modal_title = 'Remove Member' %}
-{% set form_action = '' %} 
-{% set input_id = 'removeMemberEmailInput' %}  
-{% set input_name = 'email' %}             
-{% set input_label = 'User Email to Remove' %} 
-{% set submit_text = 'Remove Member' %} 
+{% set form_action = '' %}
+{% set input_id = 'removeMemberEmailInput' %}
+{% set input_name = 'email' %}
+{% set input_label = 'User Email to Remove' %}
+{% set submit_text = 'Remove Member' %}
 {% include 'partials/_member_modal.html' %}
 
-{% set modal_id = 'changeAdminModal' %} 
+{% set modal_id = 'changeAdminModal' %}
 {% set modal_title = 'Change Admin' %}
-{% set form_action = '' %} 
-{% set input_id = 'changeAdminEmailInput' %}   
-{% set input_name = 'email' %}               
-{% set input_label = "New Admin's Email" %}    
-{% set submit_text = 'Change Admin' %} 
+{% set form_action = '' %}
+{% set input_id = 'changeAdminEmailInput' %}
+{% set input_name = 'email' %}
+{% set input_label = "New Admin's Email" %}
+{% set submit_text = 'Change Admin' %}
+{% include 'partials/_member_modal.html' %}
+
+{% set modal_id = 'inviteMemberModal' %}
+{% set modal_title = 'Invite Member' %}
+{% set form_action = '' %}
+{% set input_id = 'inviteMemberEmailInput' %}
+{% set input_name = 'email' %}
+{% set input_label = "User's Email to Invite" %}
+{% set submit_text = 'Send Invitation' %}
 {% include 'partials/_member_modal.html' %}
 
 <script>
   // Ensure variables exist and are JS-safe
   window.GROUP_ID = {{ group_id if group_id is not none else "null" }};
   window.CURRENT_USER = {{ user.id if user else "null" }};
-  
 
   console.log("GROUP_ID:", window.GROUP_ID);
   console.log("CURRENT_USER_ID:", window.CURRENT_USER);
 </script>
-
 
 <script src="{{ url_for('static', path='/js/group_details.js') }}"></script>
 

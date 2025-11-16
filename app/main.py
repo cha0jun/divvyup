@@ -3,13 +3,13 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from typing import Annotated
-from .database import engine
+from database import engine
 from sqlmodel import SQLModel
-from .routers import expense, group, invitation, user, payment
-from .models import User
-from .auth import get_current_user_optional
-from .crud import *
-from .database import *
+from routers import expense, group, invitation, user, payment
+from models import User
+from auth import get_current_user_optional
+from crud import *
+from database import *
 
 
 #Add startup event handler 
@@ -25,9 +25,9 @@ app.include_router(invitation.router)
 app.include_router(user.router)
 app.include_router(payment.router)
 
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
-templates = Jinja2Templates(directory="app/templates")
+templates = Jinja2Templates(directory="templates")
 
 UserOptional = Annotated[User | None, Depends(get_current_user_optional)]
 
@@ -52,6 +52,13 @@ async def get_register_page(request: Request, user: UserOptional):
     return templates.TemplateResponse(
         "pages/register.html", 
         {"request": request, "user": user} 
+    )
+
+@app.get("/invitations", response_class=HTMLResponse)
+async def get_user_invitations(request: Request, user: UserOptional):
+    return templates.TemplateResponse(
+        "pages/invitations.html", 
+        {"request": request, "user": user}
     )
 
 
