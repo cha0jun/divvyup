@@ -42,6 +42,15 @@ class User(SQLModel, table=True):
         back_populates="payer",
         sa_relationship_kwargs={"foreign_keys": "[Expense.payer_id]"}
     )
+
+    payments_made: List["Payment"] = Relationship(
+        back_populates="payer",
+        sa_relationship_kwargs={"foreign_keys": "[Payment.payer_id]"}
+    )
+    payments_received: List["Payment"] = Relationship(
+        back_populates="payee",
+        sa_relationship_kwargs={"foreign_keys": "[Payment.payee_id]"}
+    )
     
 
 class ExpenseGroup(SQLModel, table=True):
@@ -71,6 +80,13 @@ class ExpenseGroup(SQLModel, table=True):
     )
     invitations: List["Invitation"] = Relationship(back_populates="group")
 
+    payments: List["Payment"] = Relationship( 
+        back_populates="group",
+        sa_relationship_kwargs={"cascade": "all, delete"}
+    )
+
+ 
+
 
 class Member(SQLModel, table = True):
     __tablename__ = "member"
@@ -90,6 +106,7 @@ class Member(SQLModel, table = True):
     user: User = Relationship(back_populates="memberships")
     group: ExpenseGroup = Relationship(back_populates="members")
     
+ 
 
     
 class Expense(SQLModel, table=True):
@@ -148,6 +165,61 @@ class Breakdown(SQLModel, table = True):
         sa_relationship_kwargs={"foreign_keys": "[Breakdown.debtor_id]"}
     )
 
+class Payment(SQLModel, table=True):
+    __tablename__ = "payment"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    expense_group_id: int = Field(foreign_key="expense_group.id")
+    payer_id: int = Field(foreign_key="user.id")  
+    payee_id: int = Field(foreign_key="user.id") 
+    amount: float = Field(gt=0)
+    payment_date: datetime  # Expense.payment_date
+    
+    created_by: int = Field(foreign_key="user.id")
+    created_on: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        sa_column=Column(DateTime, nullable=False)
+    )
+    modified_by: int = Field(foreign_key="user.id")
+    modified_on: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        sa_column=Column(DateTime, nullable=False)
+    )
+
+    # Relationships
+    group: ExpenseGroup = Relationship(
+    back_populates="payments",
+    sa_relationship_kwargs={"foreign_keys": "[Payment.expense_group_id]"}
+    )
+    
+    payer: User = Relationship(
+        back_populates="payments_made",
+        sa_relationship_kwargs={"foreign_keys": "[Payment.payer_id]"}
+    )
+    payee: User = Relationship(
+        back_populates="payments_received",
+        sa_relationship_kwargs={"foreign_keys": "[Payment.payee_id]"}
+    )
+    # receipts: List["PaymentReceipt"] = Relationship(
+    #     back_populates="payment",
+    #     sa_relationship_kwargs={"cascade": "all, delete-orphan"}
+    # )
+
+
+# class PaymentReceipt(SQLModel, table=True):
+#     __tablename__ = "payment_receipt"
+    
+#     id: Optional[int] = Field(default=None, primary_key=True)
+#     payment_id: int = Field(foreign_key="payment.id")
+#     file_url: str
+#     file_name: str
+#     uploaded_by: int = Field(foreign_key="user.id")
+#     uploaded_on: datetime = Field(
+#         default_factory=lambda: datetime.now(timezone.utc),
+#         sa_column=Column(DateTime, nullable=False)
+#     )
+    
+#     payment: Payment = Relationship(back_populates="receipts")
 
 class RecurringExpense(SQLModel, table=True):
     __tablename__ = "recurring_expense"
@@ -172,7 +244,6 @@ class Audit(SQLModel, table = True):
     
     id: Optional[int] = Field(default=None, primary_key=True)
     change_description: str 
-    #@Matthew expense_group_id and created_by are nullable in the schemas. 
     expense_group_id: int = Field(foreign_key="expense_group.id")
     created_by: int = Field(foreign_key="user.id")
     created_on: datetime = Field(

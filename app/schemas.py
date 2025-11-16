@@ -29,7 +29,8 @@ class UserLogin(BaseModel):
 
 class MemberCreate(BaseModel):
     #User.id of the new user to be added to the group
-    user_id: int 
+    # user_id: int 
+    email: EmailStr
     # is_admin: bool = False
     #description not showing on swagger 
 
@@ -43,6 +44,9 @@ class MemberRead(BaseModel):
     added_on: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+class MemberEmailRequest(BaseModel):
+    email: EmailStr
 
 class ExpenseGroupBase(BaseModel):
     name: str
@@ -64,8 +68,8 @@ class ExpenseGroupRead(ExpenseGroupBase):
     model_config = ConfigDict(from_attributes=True)
     
 class TransferOwnership(BaseModel):
-    #User ID of the member to promote to admin
-    new_admin_user_id: int
+    # User email of the member to promote to admin
+    new_admin_email: str
 
 class AuditRead(BaseModel):
     change_description: str
@@ -159,6 +163,33 @@ class UserBalance(BaseModel):
 
 class GroupBalanceResponse(BaseModel):
     balances: Dict[str, UserBalance]
+
+## ---------Payment Schemas--------
+
+class PaymentBase(BaseModel):
+    payer_id: int
+    payee_id: int
+    amount: float
+    payment_date: datetime
+
+class PaymentRead(PaymentBase):
+    expense_group_id: int
+    payer: UserRead
+    payee: UserRead
+    
+    model_config = ConfigDict(from_attributes=True)
+
+class PaymentCreate(PaymentBase):
+    pass
+
+class PaymentUpdate(BaseModel):
+    """For PUT /groups/{group_id}/payments/{payment_id}"""
+    # All fields optional for partial updates
+    payer_id: Optional[int] = None
+    payee_id: Optional[int] = None
+    amount: Optional[float] = PydanticField(None, gt=0)
+    payment_date: Optional[datetime] = None
+    
 
 ## ---------Invitation Schemas--------
 

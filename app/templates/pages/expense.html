@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function fetchData() {
     try {
-      const response = await fetch(`/groups/${groupId}/expenses`);
+      const response = await fetch(`/api/groups/${groupId}/expenses`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }

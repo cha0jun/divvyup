@@ -69,8 +69,11 @@ def create_member(db: Session, user_to_add: User, group_id: int, added_by_user_i
     db.refresh(member, ["user"])
     return member
 
-def remove_member_from_group(db: Session, member_id: int)-> Member:
-    db_member = get_member_by_member_id(db,member_id)
+
+def remove_member_from_group(db: Session, db_member: Member):
+    """
+    Deletes a given Member object from the database and commits the session.
+    """
     db.delete(db_member)
     db.commit()
 
@@ -148,17 +151,20 @@ def update_expense_group(db: Session, group_id: int, group_update: ExpenseGroupU
     if not db_group:
         raise HTTPException(status_code=404, detail="Expense group not found")
     
-    if group_update.name is not None:
-        db_group.name = group_update.name
-    if group_update.description is not None:
-        db_group.description = group_update.description
+    if group_update.name:
+        db_group.name = group_update.name.strip()
+
+    if group_update.description:
+        db_group.description = group_update.description.strip()
 
     db_group.modified_by = modifier.id
     db_group.modified_on = datetime.now()
+    db.add(db_group)
     
     db.commit()
     db.refresh(db_group)
     return db_group
+
 
 def transfer_admin_rights(db: Session, group_id: int, new_admin_user_id: int, modifier: User) -> ExpenseGroup:
     db_group = get_expense_group(db, group_id)
@@ -394,6 +400,66 @@ def delete_breakdown(db: Session, breakdown_id: int) -> None:
     
     return
 
+#--------------Payment---------------
+def get_payments_by_group_id(db: Session, group_id:int) -> List[Payment]:
+    return db.exec(
+        select(Payment).where(Payment.expense_group_id == group_id)).all()
+
+def get_payment(db: Session, payment_id:int ) -> Payment:
+    return db.exec(
+        select(Payment).where(Payment.id == payment_id)
+    ).first()
+
+def create_payment(db: Session, payment: PaymentCreate, group_id:int, creator: User) -> Payment | None:
+    new_payment = Payment(
+        expense_group_id=group_id,
+        amount = payment.amount,
+        payment_date = payment.payment_date,
+        payer_id = payment.payer_id,
+        payee_id = payment.payee_id,
+        created_by = creator.id,
+        # created_on = datetime.now(),
+        modified_by = creator.id)
+        # modified_on = datetime.now()
+    
+    db.add(new_payment)
+    db.commit()
+    db.refresh(new_payment, ["payer", "payee"])
+
+    return new_payment
+    
+def update_payment(db: Session, payment: PaymentUpdate, payment_id: int, modified_by:User) -> Payment | None:
+    db_payment = get_payment(db, payment_id)
+    if not db_payment:
+        raise HTTPException(status_code=404, detail="Payment not found")
+ 
+    if payment.amount is not None:
+        db_payment.amount = payment.amount
+    if payment.payer_id is not None:
+        db_payment.payer_id = payment.payer_id
+    if payment.payee_id is not None:
+        db_payment.payee_id = payment.payee_id
+
+    db_payment.modified_by = modified_by.id
+    # db_payment.modified_on = datetime.now()
+    
+    db.commit()
+    db.refresh(db_payment)
+    return db_payment
+
+def delete_payment(db: Session, payment_id: int) -> None:
+    db_payment = get_payment(db, payment_id)
+    if not db_payment:
+        raise HTTPException(status_code=404, detail="Payment not found")
+    
+    db.delete(db_payment)
+    db.commit()
+    return
+
+
+
+
+
 #--------------Balance Calculation---------------
 
 def calculate_group_balances(group: ExpenseGroup) -> GroupBalanceResponse:
@@ -407,6 +473,12 @@ def calculate_group_balances(group: ExpenseGroup) -> GroupBalanceResponse:
             if payer_id != debtor_id:
                 key = (debtor_id, payer_id)
                 raw_debts[key] = raw_debts.get(key, 0.0) + split.amount
+
+    # Subtract payments from raw_debts
+    for payment in group.payments:  
+        key = (payment.payer_id, payment.payee_id)  
+        raw_debts[key] = raw_debts.get(key, 0.0) - payment.amount
+    
 
     #offset mutual debts
     final_balances = {} #{(debtor_id, payer_id):  amount}
@@ -431,7 +503,7 @@ def calculate_group_balances(group: ExpenseGroup) -> GroupBalanceResponse:
                 final_balances[(memberB_id, memberA_id)] = round(debt_BowesA, 2)
 
     
-    #build UserBalance objects for each member
+    #build UserBalance objects for each member for API response
  
     member_names = {m.user_id: m.user.name for m in group.members}
 

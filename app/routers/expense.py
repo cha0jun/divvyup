@@ -5,13 +5,14 @@ from ..auth import UserDep
 from ..crud import *
 from ..services import *
 
+
 router = APIRouter(
-    tags= ['expenses']
+    prefix="/api/groups",  # Add api prefix
+    tags=["expenses"]
 )
 
-
 #------Expense Routes-------
-@router.get("/groups/{group_id}/expenses", response_model=List[ExpenseRead])
+@router.get("/{group_id}/expenses", response_model=List[ExpenseRead])
 def get_expenses_bl(group_id:int,  db: SessionDep, current_user: UserDep):
     validate_expense_group(db, group_id, "Expense group not found.")
     validate_group_member(db, current_user.id, group_id, "Only members can view group expenses")
@@ -20,7 +21,7 @@ def get_expenses_bl(group_id:int,  db: SessionDep, current_user: UserDep):
     return expenses
     
 
-@router.get("/groups/{group_id}/expenses/{expense_id}", response_model=ExpenseRead)
+@router.get("/{group_id}/expenses/{expense_id}", response_model=ExpenseRead)
 def get_expense_by_id_bl(group_id:int, expense_id:int, db: SessionDep, current_user: UserDep):
     validate_expense_group(db, group_id, "Expense group not found.")
     validate_group_member(db, current_user.id, group_id, "Only members can view group expenses")
