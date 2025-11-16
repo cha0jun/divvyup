@@ -1,0 +1,128 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Expenses
+{% endblock %}
+
+{% block content %} 
+  <div class="container my-4">
+        <div class="main-container p-4">
+            <!-- ======================= -->
+            <!-- == Header Section == -->
+            <!-- ======================= -->
+            <header class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
+                <div class="d-flex align-items-center">
+                    <a href="#" class="text-dark me-3"><i class="bi bi-arrow-left fs-4"></i></a>
+                    <h1 class="h4 mb-0">Add Expense</h1>
+                </div>
+            </header>
+                <!-- == Form == -->
+                    <form>
+                        <!-- Amount -->
+                        <div class="mb-3">
+                            <label for="expenseAmount" class="form-label">Amount</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" id="expenseAmount" placeholder="0.00" step="0.01">
+                            </div>
+                        </div>
+
+                        <!-- Expense Name -->
+                        <div class="mb-3">
+                            <label for="expenseName" class="form-label">Expense Name</label>
+                            <input type="text" class="form-control" id="expenseName" placeholder="Enter expense name">
+                        </div>
+
+                        <!-- Description -->
+                        <div class="mb-3">
+                            <label for="expenseDescription" class="form-label">Description</label>
+                            <textarea class="form-control" id="expenseDescription" rows="3" placeholder="Add a description..."></textarea>
+                        </div>
+
+                        <!-- Payment Date -->
+                        <div class="mb-3">
+                            <label for="paymentDate" class="form-label">Payment Date</label>
+                            <input type="date" class="form-control" id="paymentDate">
+                        </div>
+
+                        <!-- Paid by -->
+                        <div class="mb-4">
+                            <label for="paidBy" class="form-label">Paid by</label>
+                            <select class="form-select" id="paidBy">
+                                <option selected>Select member</option>
+                                <option value="1">John Doe</option>
+                                <option value="2">Jane Smith</option>
+                                <option value="3">Mike Johnson</option>
+                            </select>
+                        </div>
+                        
+                        <!-- How should this be split? -->
+                        <div class="mb-3">
+                            <label class="form-label">How should this be split?</label>
+                            <div class="d-flex gap-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="splitType" id="splitEqually" checked>
+                                    <label class="form-check-label" for="splitEqually">Split equally</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="splitType" id="splitByAmount">
+                                    <label class="form-check-label" for="splitByAmount">Split by exact amount</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Member List for Splitting -->
+                        <div class="d-flex flex-column gap-2 mb-3">
+                            <!-- John Doe -->
+                            <div class="d-flex align-items-center p-2 border rounded">
+                                <div class="flex-grow-1">John Doe</div>
+                                <div class="input-group" style="width: 120px;">
+                                    <span class="input-group-text">$</span>
+                                    <input type="text" class="form-control text-end" value="0.00">
+                                </div>
+                            </div>
+                             <!-- Jane Smith -->
+                            <div class="d-flex align-items-center p-2 border rounded">
+                                <div class="flex-grow-1">Jane Smith</div>
+                                <div class="input-group" style="width: 120px;">
+                                    <span class="input-group-text">$</span>
+                                    <input type="text" class="form-control text-end" value="0.00">
+                                </div>
+                            </div>
+                             <!-- Mike Johnson -->
+                             <div class="d-flex align-items-center p-2 border rounded">
+                                <div class="flex-grow-1">Mike Johnson</div>
+                                <div class="input-group" style="width: 120px;">
+                                    <span class="input-group-text">$</span>
+                                    <input type="text" class="form-control text-end" value="0.00" disabled>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Total Amount -->
+                        <div class="d-flex justify-content-end fw-bold mb-4">
+                            <span>Total Amount:</span>
+                            <span class="ms-2">$120</span>
+                        </div>
+                        
+                        <!-- Receipt Dropzone -->
+                        <div>
+                            <div class="dropzone text-center text-muted">
+                                <i class="bi bi-cloud-arrow-up fs-2"></i>
+                                <div>Drag and drop receipt image or click to browse</div>
+                                <small>Max 5MB. JPG, PNG, PDF.</small>
+                            </div>
+                        </div>
+                    </form>
+                <!-- Action Buttons -->
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <button type="button" class="btn btn-light border px-4">Cancel</button>
+                            <button type="button" class="btn btn-dark px-4">Add Expense</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

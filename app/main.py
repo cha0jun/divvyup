@@ -100,6 +100,6 @@ async def read_root(request: Request, user: UserOptional, group_id:int):
 @app.get("/expenses/{expense_id}", response_class=HTMLResponse)
 async def read_root(request: Request, user: UserOptional, expense_id:int):
     return templates.TemplateResponse(
-        "pages/expense_detail.html", 
+        "pages/expense_form.html", 
         {"request": request, "user": user, "expense_id":expense_id} 
     )
