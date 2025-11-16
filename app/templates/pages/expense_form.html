@@ -66,7 +66,7 @@
                                 </div>
                                 <div class="form-check">
                                     <input class="form-check-input" type="radio" name="splitType" id="splitByAmount">
-                                    <label class="form-check-label" for="splitByAmount">Split by exact amount</label>
+                                    <label class="form-check-label" for="splitByAmount">Split individually</label>
                                 </div>
                             </div>
                         </div>
@@ -106,15 +106,14 @@
                         </div>
                         
                         <!-- Receipt Dropzone -->
-                        <div>
-                            <div class="dropzone text-center text-muted">
-                                <i class="bi bi-cloud-arrow-up fs-2"></i>
-                                <div>Drag and drop receipt image or click to browse</div>
-                                <small>Max 5MB. JPG, PNG, PDF.</small>
+                        <div class="form-control">
+                            <div class="mb-3 text-muted">
+                                <label for="formFileMultiple" class="form-label">Upload receipts and bookings</label>
+                                <input class="form-control" type="file" id="formFileMultiple" multiple>
                             </div>
                         </div>
                     </form>
-                <!-- Action Buttons -->
+                    <!-- Action Buttons -->
                         <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
                             <button type="button" class="btn btn-light border px-4">Cancel</button>
                             <button type="button" class="btn btn-dark px-4">Add Expense</button>
