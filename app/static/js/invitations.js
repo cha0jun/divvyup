@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function fetchMyInvitations() {
         showLoading();
         try {
-            const response = await fetch('/invitations/me', {
+            const response = await fetch('/api/invitations/me', {
                 credentials: 'include'
             });
 
@@ -93,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
         actionDiv.querySelectorAll('button').forEach(btn => btn.disabled = true);
 
         try {
-            const response = await fetch(`/invitations/${invitationId}`, {
+            const response = await fetch(`/api/invitations/${invitationId}`, {
                 method: 'PATCH',
                 credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },

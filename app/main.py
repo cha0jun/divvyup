@@ -70,7 +70,8 @@ async def groups_page(request: Request, user: UserOptional,  db: SessionDep):
     return templates.TemplateResponse("pages/groups.html", {
         "request": request,
         "groups": groups,
-        "active_page": "groups"
+        "active_page": "groups",
+        "user": user # need to pass this to check if user to show invitation in navbar 
     })
 
 @app.get("/groups/{group_id}",response_class=HTMLResponse)

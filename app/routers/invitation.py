@@ -5,7 +5,10 @@ from auth import UserDep
 from crud import *
 from services import *
 
-router = APIRouter()
+router = APIRouter(
+    prefix="/api",
+    tags=["invitations"]
+)
 
 
 

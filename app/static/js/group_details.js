@@ -518,7 +518,7 @@ async function handleCancelInvitation(event) {
     button.textContent = 'Canceling...';
 
     try {
-        const response = await fetch(`/invitations/${invitationId}`, {
+        const response = await fetch(`/api/invitations/${invitationId}`, {
             method: 'DELETE',
             credentials: 'include',
         });
@@ -764,6 +764,9 @@ document.addEventListener('show.bs.modal', (event) => {
     }
     else if (form.id === 'editGroupModalForm') {
         form.addEventListener('submit', handleEditGroup, { once: true });
+    }
+    else if (form.id === 'inviteMemberModalForm') {
+        form.addEventListener('submit', handleInviteMember, { once: true });
     }
 });
 
