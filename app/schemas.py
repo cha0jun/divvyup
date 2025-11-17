@@ -173,6 +173,7 @@ class PaymentBase(BaseModel):
     payment_date: datetime
 
 class PaymentRead(PaymentBase):
+    id : int
     expense_group_id: int
     payer: UserRead
     payee: UserRead

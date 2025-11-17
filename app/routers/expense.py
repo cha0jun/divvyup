@@ -1,9 +1,9 @@
 from fastapi import APIRouter, status
-from schemas import *
-from database import *
-from auth import UserDep
-from crud import *
-from services import *
+from ..schemas import *
+from ..database import *
+from ..auth import UserDep
+from ..crud import *
+from ..services import *
 
 
 router = APIRouter(

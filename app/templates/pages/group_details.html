@@ -88,6 +88,9 @@
               <a href="#" id="recurringExpensesLink" class="btn btn-outline-primary w-100 mb-2">
                 View Recurring Expenses
               </a>
+              <a href="#" id="viewPaymentsLink" class="btn btn-outline-secondary w-100 mb-2">
+                View Payments
+              </a>
             </div>
           </div>
         </div>
@@ -120,7 +123,9 @@
                 Edit Group Details
               </button>
               <a href="#" id="viewHistoryLink" class="btn btn-outline-secondary w-100 mb-2">View History</a>
-              <a href="#" id="deleteGroupLink" class="btn btn-outline-danger w-100 mb-2">Delete Group</a>
+              <button type="button" id="deleteGroupLink" class="btn btn-outline-danger w-100 mb-2">
+                Delete Group
+              </button>
             </div>
           </div>
         </div>
@@ -249,14 +254,16 @@
 {% include 'partials/_member_modal.html' %}
 
 <script>
-  // Ensure variables exist and are JS-safe
+  // Ensure variables exist
   window.GROUP_ID = {{ group_id if group_id is not none else "null" }};
   window.CURRENT_USER = {{ user.id if user else "null" }};
+  
 
   console.log("GROUP_ID:", window.GROUP_ID);
   console.log("CURRENT_USER_ID:", window.CURRENT_USER);
 </script>
 
 <script src="{{ url_for('static', path='/js/group_details.js') }}"></script>
+
 
 {% endblock %}

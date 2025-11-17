@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     const container = document.getElementById('invitationsContainer');
-    
+
     // Fetch and display invitations on page load
     fetchMyInvitations();
 
@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) {
                 throw new Error('Failed to load invitations.');
             }
-            
+
             const invitations = await response.json();
             displayInvitations(invitations);
 
@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             </div>
         `).join('');
-        
+
         // Add event listeners to all new buttons
         container.querySelectorAll('.respond-btn').forEach(button => {
             button.addEventListener('click', handleInvitationResponse);
@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const button = event.target;
         const action = button.dataset.action;
         const invitationId = button.dataset.id;
-        
+
         // Find the parent card and action/result elements
         const card = button.closest('.card');
         const actionDiv = card.querySelector('.invitation-actions');

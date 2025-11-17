@@ -1,11 +1,11 @@
 from fastapi import APIRouter, status, Response, Depends, Cookie
 from typing import Annotated
-from schemas import *
-from database import *
-from crud import *
-from services import *
-from security import *
-from auth import *
+from ..schemas import *
+from ..database import *
+from ..crud import *
+from ..services import *
+from ..security import *
+from ..auth import *
 
 router = APIRouter(
     tags=['user']

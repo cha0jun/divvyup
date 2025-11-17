@@ -156,7 +156,7 @@ async function fetchPendingInvites() {
             pendingInvitesData = []; // Set global data to empty
             return []; // Return empty array to Promise.all
         }
-        
+
         // Handle other non-ok errors
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -302,7 +302,7 @@ function displayPendingInvites() {
                 <span class="fw-bold">${escapeHtml(inv.invitee.name)}</span>
                 <small class="text-muted d-block">${escapeHtml(inv.invitee.email)}</small>
             </div>
-            ${(window.CURRENT_USER === groupData.admin_id || window.CURRENT_USER === inv.inviter.id) ? 
+            ${(window.CURRENT_USER === groupData.admin_id || window.CURRENT_USER === inv.inviter.id) ?
             `<button class="btn btn-outline-danger btn-sm cancel-invite-btn" data-id="${inv.id}">
                 Cancel
             </button>` : ''}
@@ -340,6 +340,7 @@ function updateLinks() {
     document.getElementById('viewAllExpensesLink2').href = `/groups/${groupId}/expenses`;
     document.getElementById('viewHistoryLink').href = `/groups/${groupId}/view-audit`;
     document.getElementById('deleteGroupLink').href = `/groups/${groupId}/delete-group`;
+    document.getElementById('viewPaymentsLink').href = `/groups/${groupId}/payments`;
 }
 
 // Initialize page
@@ -485,11 +486,11 @@ async function handleInviteMember(event) {
         }
 
         alert('Invitation sent successfully!');
-        
+
         // Refresh pending invites list
         await fetchPendingInvites();
         displayPendingInvites();
-        
+
         // Hide the modal
         const modalEl = document.getElementById('inviteMemberModal');
         const modal = bootstrap.Modal.getInstance(modalEl);
@@ -509,7 +510,7 @@ async function handleInviteMember(event) {
 async function handleCancelInvitation(event) {
     const button = event.target;
     const invitationId = button.dataset.id;
-    
+
     if (!confirm('Are you sure you want to cancel this invitation?')) {
         return;
     }
@@ -529,11 +530,11 @@ async function handleCancelInvitation(event) {
             // Remove the item from the list
             const listItem = button.closest('li');
             listItem.parentNode.removeChild(listItem);
-            
+
             // Check if list is now empty
             const list = document.getElementById('pendingInvitesList');
             if (list.children.length === 0) {
-                 list.innerHTML = 
+                list.innerHTML =
                     '<li class="list-group-item text-muted">No pending invitations.</li>';
                 // Update badge
                 document.getElementById('pendingInvitesCount').textContent = '0';
@@ -542,8 +543,8 @@ async function handleCancelInvitation(event) {
                 document.getElementById('pendingInvitesCount').textContent = list.children.length;
             }
         } else {
-             const result = await response.json();
-             throw new Error(result.detail || 'Failed to cancel invitation');
+            const result = await response.json();
+            throw new Error(result.detail || 'Failed to cancel invitation');
         }
 
     } catch (error) {

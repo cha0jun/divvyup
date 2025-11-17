@@ -3,13 +3,13 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from typing import Annotated
-from database import engine
+from .database import engine
 from sqlmodel import SQLModel
-from routers import expense, group, invitation, user, payment
-from models import User
-from auth import get_current_user_optional
-from crud import *
-from database import *
+from .routers import expense, group, invitation, user, payment
+from .models import User
+from .auth import get_current_user_optional
+from .crud import *
+from .database import *
 
 
 #Add startup event handler 
@@ -25,9 +25,9 @@ app.include_router(invitation.router)
 app.include_router(user.router)
 app.include_router(payment.router)
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
-templates = Jinja2Templates(directory="templates")
+templates = Jinja2Templates(directory="app/templates")
 
 UserOptional = Annotated[User | None, Depends(get_current_user_optional)]
 
@@ -78,6 +78,13 @@ async def groups_page(request: Request, user: UserOptional,  db: SessionDep):
 async def get_group_detail(request: Request, user: UserOptional, group_id: int, db: SessionDep):
     return templates.TemplateResponse("pages/group_details.html",
         {"request": request, "user": user, "group_id": group_id})
+
+@app.get("/groups/{group_id}/payments",response_class=HTMLResponse)
+async def get_group_payments(request: Request, user: UserOptional, group_id: int, db: SessionDep):
+    return templates.TemplateResponse("pages/payments.html",
+        {"request": request, "user": user, "group_id": group_id})
+
+
       
 ## Expense
 @app.get("/groups/{group_id}/expenses", response_class=HTMLResponse)
