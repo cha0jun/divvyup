@@ -119,6 +119,7 @@ class Expense(SQLModel, table=True):
     payer_id: int = Field(foreign_key="user.id")
     name: str
     description: Optional[str] = None
+    receipt_path: Optional[str] = None
     created_by: int = Field(foreign_key="user.id")
     created_on: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),

@@ -219,6 +219,7 @@ def create_expense(db: Session, expense: ExpenseCreate, group_id:int, creator: U
         payment_date = expense.payment_date,
         payer_id = expense.payer_id, # nested object => UserRead
         description = expense.description,
+        receipt_path = expense.receipt_path,
         created_by = creator.id,
         # created_on = datetime.now(),
         modified_by = creator.id,
@@ -257,7 +258,8 @@ def update_expense(db: Session, expense: ExpenseUpdate, expense_id: int, modifie
         db_expense.payer_id = expense.payer_id
     if expense.description is not None:
         db_expense.description = expense.description
-
+    if expense.receipt_path is not None:
+        db_expense.receipt_path = expense.receipt_path
     
     if getattr(expense, "breakdowns", None) is not None:
         # Delete all old breakdowns for this expense

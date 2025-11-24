@@ -87,6 +87,7 @@ CREATE TABLE `expense` (
     `created_on` TEXT NOT NULL DEFAULT (STRFTIME('%Y-%m-%d %H:%M:%S', 'NOW')),
     `modified_by` INTEGER NOT NULL,
     `modified_on` TEXT NOT NULL DEFAULT (STRFTIME('%Y-%m-%d %H:%M:%S', 'NOW')),
+    `receipt_path` TEXT,
 
     FOREIGN KEY(`expense_group_id`) REFERENCES `expense_group`(`id`) ON DELETE CASCADE,
     FOREIGN KEY(`payer_id`) REFERENCES `user`(`id`) ON DELETE CASCADE,

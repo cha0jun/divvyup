@@ -1,18 +1,47 @@
-from fastapi import APIRouter, status
+from fastapi import APIRouter, status, UploadFile, File
+from pydantic import Json
 from ..schemas import *
 from ..database import *
 from ..auth import UserDep
 from ..crud import *
 from ..services import *
+import uuid
 
 
 router = APIRouter(
-    prefix="/api/groups",  # Add api prefix
+    prefix="/api/expenses",  # Add api prefix
     tags=["expenses"]
 )
 
+#------File upload---------
+async def create_receipt(file: UploadFile | None = None):
+    if not file:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail= "No uploaded file found.")
+     # 1. Define the upload directory
+    upload_dir = "./data/images"
+    
+    # 2. Ensure the directory exists (creates it if it doesn't)
+    os.makedirs(upload_dir, exist_ok=True)
+    
+    # 3. Construct a secure file path
+    # Suggestion: Append IDs to filename to prevent overwriting if different users upload files with same names
+    ext = Path(file.filename).suffix
+    save_filename = str(uuid.uuid4()) + ext
+    file_path = os.path.join(upload_dir, save_filename)
+
+    # 4. Save the file
+    try:
+        with open(file_path, "wb") as buffer:
+            # Read the file content asynchronously
+            content = await file.read()
+            buffer.write(content)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Could not save file: {str(e)}")
+
+    return file_path
+
 #------Expense Routes-------
-@router.get("/{group_id}/expenses", response_model=List[ExpenseRead])
+@router.get("/{group_id}", response_model=List[ExpenseRead])
 def get_expenses_bl(group_id:int,  db: SessionDep, current_user: UserDep):
     validate_expense_group(db, group_id, "Expense group not found.")
     validate_group_member(db, current_user.id, group_id, "Only members can view group expenses")
@@ -21,7 +50,7 @@ def get_expenses_bl(group_id:int,  db: SessionDep, current_user: UserDep):
     return expenses
     
 
-@router.get("/{group_id}/expenses/{expense_id}", response_model=ExpenseRead)
+@router.get("/{expense_id}", response_model=ExpenseRead)
 def get_expense_by_id_bl(group_id:int, expense_id:int, db: SessionDep, current_user: UserDep):
     validate_expense_group(db, group_id, "Expense group not found.")
     validate_group_member(db, current_user.id, group_id, "Only members can view group expenses")
@@ -31,8 +60,8 @@ def get_expense_by_id_bl(group_id:int, expense_id:int, db: SessionDep, current_u
     return e
 
 
-@router.post("/groups/{group_id}/expenses", response_model=ExpenseRead,status_code=status.HTTP_201_CREATED)
-def create_expense_bl(group_id:int, expense:ExpenseCreate, db: SessionDep, current_user: UserDep):
+@router.post("/{group_id}", response_model=ExpenseRead,status_code=status.HTTP_201_CREATED)
+async def create_expense_bl(group_id:int, expense:Json[ExpenseCreate], db: SessionDep, current_user: UserDep, file: UploadFile | None = File(None)):
       
     """
     Create a new expense with breakdowns (splits).
@@ -45,6 +74,12 @@ def create_expense_bl(group_id:int, expense:ExpenseCreate, db: SessionDep, curre
 
     for breakdown in expense.breakdowns:
         validate_group_member(db, breakdown.debtor_id, group_id, "All debtors must be group members")
+        
+    if file:
+        path = await create_receipt(file)
+        expense.receipt_path = path
+    else:
+        print('no file')
     
     created_expense = create_expense(db, expense, group_id,current_user)
     create_audit(
@@ -61,7 +96,7 @@ def create_expense_bl(group_id:int, expense:ExpenseCreate, db: SessionDep, curre
     
     return created_expense
   
-@router.patch("/groups/{group_id}/expenses/{expense_id}", response_model=ExpenseRead)
+@router.patch("/{expense_id}", response_model=ExpenseRead)
 def update_expense_bl(group_id:int, expense_id:int, expense: ExpenseUpdate, db: SessionDep, current_user: UserDep):
     validate_expense_group(db, group_id, "Expense group not found.")
     validate_group_member(db, current_user.id, group_id, "Only members can update group expenses")
@@ -81,7 +116,7 @@ def update_expense_bl(group_id:int, expense_id:int, expense: ExpenseUpdate, db: 
     
     return updated_expense
 
-@router.delete("/groups/{group_id}/expenses/{expense_id}",status_code=204)
+@router.delete("/{expense_id}/groups/{group_id}",status_code=204)
 def delete_expense_bl(group_id:int, expense_id:int, db: SessionDep, current_user: UserDep):
     validate_expense_group(db, group_id, "Expense group not found.")
     validate_group_member(db, current_user.id, group_id, "Only members can delete group expenses")
@@ -102,6 +137,8 @@ def delete_expense_bl(group_id:int, expense_id:int, db: SessionDep, current_user
         )
     
     return
+    
+    
              
 #--------Expense Breakdown Routes------
 
@@ -109,7 +146,7 @@ def delete_expense_bl(group_id:int, expense_id:int, db: SessionDep, current_user
 # def add_breakdown():
 #     pass
 
-@router.get("/group/{group_id}/expense/{expense_id}/breakdown", response_model=BreakdownRead)
+@router.get("/{expense_id}/groups/{group_id}/breakdown", response_model=BreakdownRead)
 def get_breakdown(expense_id:int, group_id:int, db:SessionDep, current_user: UserDep):
     validate_expense_group(db, group_id, "Expense group not found.")
     validate_group_member(db, current_user.id, group_id, "Only members can view recurring expenses")
@@ -118,7 +155,7 @@ def get_breakdown(expense_id:int, group_id:int, db:SessionDep, current_user: Use
 
 
 #------Recurring Expense Routes-------
-@router.get("/groups/{group_id}/expenses/{expense_id}/recurring", response_model = RecurringExpenseBase)
+@router.get("/{expense_id}/groups/{group_id}/recurring", response_model = RecurringExpenseBase)
 def get_recurring_expense_bl(group_id:int, expense_id:int, db: SessionDep, current_user: UserDep):
     validate_expense_group(db, group_id, "Expense group not found.")
     validate_group_member(db, current_user.id, group_id, "Only members can view recurring expenses")
@@ -129,7 +166,7 @@ def get_recurring_expense_bl(group_id:int, expense_id:int, db: SessionDep, curre
         end_date= re.end_date
     )
 
-@router.post("/groups/{group_id}/expenses/{expense_id}/recurring", response_model = RecurringExpenseBase)
+@router.post("/{expense_id}/groups/{group_id}/recurring", response_model = RecurringExpenseBase)
 def create_recurring_expense_bl(group_id:int, expense_id:int, recurring_expense: RecurringExpenseBase , db: SessionDep, current_user: UserDep):
     validate_expense_group(db, group_id, "Expense group not found.")
     validate_group_member(db, current_user.id, group_id, "Only members can add a recurring expense")
@@ -156,7 +193,7 @@ def create_recurring_expense_bl(group_id:int, expense_id:int, recurring_expense:
     )
     
 
-@router.put("/groups/{group_id}/expenses/{expense_id}/recurring", response_model = RecurringExpense)
+@router.put("/{expense_id}/groups/{group_id}/recurring", response_model = RecurringExpense)
 def update_recurring_expense_bl(group_id:int, expense_id:int, recurring_expense: RecurringExpenseBase, db: SessionDep, current_user: UserDep):
     validate_expense_group(db, group_id, "Expense group not found.")
     validate_group_member(db, current_user.id, group_id, "Only members can updated a recurring expense")
@@ -181,7 +218,7 @@ def update_recurring_expense_bl(group_id:int, expense_id:int, recurring_expense:
     )
     
 
-@router.delete("/groups/{group_id}/expenses/{expense_id}/recurring", response_model = RecurringExpense)
+@router.delete("/{expense_id}/groups/{group_id}/recurring", response_model = RecurringExpense)
 def delete_recurring_expense_bl(group_id:int, expense_id:int, db: SessionDep, current_user: UserDep):
     validate_expense_group(db, group_id, "Expense group not found.")
     validate_group_member(db, current_user.id, group_id, "Only members can delete a recurring expense")
@@ -202,3 +239,5 @@ def delete_recurring_expense_bl(group_id:int, expense_id:int, db: SessionDep, cu
         current_user
         )
     return
+
+

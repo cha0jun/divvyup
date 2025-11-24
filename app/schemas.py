@@ -103,6 +103,7 @@ class ExpenseBase(BaseModel):
     payer_id: int
     amount: float
     payment_date: datetime
+    receipt_path: Optional[str] = None
     
 # might be possible to use ExpenseBase across
     
@@ -131,6 +132,7 @@ class ExpenseUpdate(BaseModel):
     payment_date: Optional[datetime] = None
     payer_id: Optional[int] = None
     breakdowns: Optional[List[BreakdownCreate]] = None
+    receipt_path: Optional[str] = None
 
 class ExpenseRead(ExpenseBase):
     id: int
