@@ -23,7 +23,7 @@
                             <label for="expenseAmount" class="form-label">Amount</label>
                             <div class="input-group">
                                 <span class="input-group-text">$</span>
-                                <input type="number" class="form-control" id="expenseAmount" placeholder="0.00" step="0.01">
+                                <input type="number" class="form-control" id="expenseAmount" placeholder="0.00">
                             </div>
                         </div>
 
@@ -49,79 +49,221 @@
                         <div class="mb-4">
                             <label for="paidBy" class="form-label">Paid by</label>
                             <select class="form-select" id="paidBy">
-                                <option selected>Select member</option>
-                                <option value="1">John Doe</option>
-                                <option value="2">Jane Smith</option>
-                                <option value="3">Mike Johnson</option>
                             </select>
                         </div>
                         
                         <!-- How should this be split? -->
-                        <div class="mb-3">
                             <label class="form-label">How should this be split?</label>
-                            <div class="d-flex gap-4">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="splitType" id="splitEqually" checked>
-                                    <label class="form-check-label" for="splitEqually">Split equally</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="splitType" id="splitByAmount">
-                                    <label class="form-check-label" for="splitByAmount">Split individually</label>
-                                </div>
-                            </div>
-                        </div>
-                        
                         <!-- Member List for Splitting -->
-                        <div class="d-flex flex-column gap-2 mb-3">
-                            <!-- John Doe -->
-                            <div class="d-flex align-items-center p-2 border rounded">
-                                <div class="flex-grow-1">John Doe</div>
-                                <div class="input-group" style="width: 120px;">
-                                    <span class="input-group-text">$</span>
-                                    <input type="text" class="form-control text-end" value="0.00">
-                                </div>
-                            </div>
-                             <!-- Jane Smith -->
-                            <div class="d-flex align-items-center p-2 border rounded">
-                                <div class="flex-grow-1">Jane Smith</div>
-                                <div class="input-group" style="width: 120px;">
-                                    <span class="input-group-text">$</span>
-                                    <input type="text" class="form-control text-end" value="0.00">
-                                </div>
-                            </div>
-                             <!-- Mike Johnson -->
-                             <div class="d-flex align-items-center p-2 border rounded">
-                                <div class="flex-grow-1">Mike Johnson</div>
-                                <div class="input-group" style="width: 120px;">
-                                    <span class="input-group-text">$</span>
-                                    <input type="text" class="form-control text-end" value="0.00" disabled>
-                                </div>
-                            </div>
-                        </div>
-                        
+                        <div class="d-flex flex-column gap-2 mb-3" id="splitMembersContainer">
+                            <div class="text-center text-muted">Loading members...</div>
+                        </div>                            
                         <!-- Total Amount -->
                         <div class="d-flex justify-content-end fw-bold mb-4">
-                            <span>Total Amount:</span>
-                            <span class="ms-2">$120</span>
+                            <span>Total Split Amount:</span>
+                            <span class="ms-2" id="splitTotalDisplay">$0.00</span>
                         </div>
-                        
                         <!-- Receipt Dropzone -->
                         <div class="form-control">
                             <div class="mb-3 text-muted">
-                                <label for="formFile" class="form-label">Upload receipts and bookings</label>
+                                <label for="formFile" class="form-label">Upload receipts</label>
                                 <input class="form-control" type="file" id="formFile">
                             </div>
                         </div>
                     </form>
                     <!-- Action Buttons -->
                         <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
-                            <button type="button" class="btn btn-light border px-4">Cancel</button>
-                            <button type="button" class="btn btn-dark px-4">Add Expense</button>
+                            <button onclick="javascript:history.back()" type="button" class="btn btn-light border px-4">Cancel</button>
+                            <button type="button" class="btn btn-dark px-4" id="submitExpenseBtn">Add Expense</button>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+<script src="/static/js/common.js"></script>
+<script>
+const groupId = "{{ group_id }}"; // You might get this from the URL or local storage
+const apiUrl = `/api/expenses/${groupId}`; 
+async function initializeExpenseForm() {
+    const members = await fetchGroupMembers(groupId);
+    // Select the DOM elements
+    const paidBySelect = document.getElementById('paidBy');
+    const splitContainer = document.getElementById('splitMembersContainer');
+
+    // Clear existing content (remove hardcoded HTML or loading text)
+    splitContainer.innerHTML = '';
+    
+    // Reset Dropdown but keep the default "Select member" option
+    paidBySelect.innerHTML = '<option value="" selected disabled>Select member</option>';
+
+    // Loop through members and create elements
+    members.forEach(member => {
+        // --- A. Populate "Paid By" Dropdown ---
+        const option = document.createElement('option');
+        // Adjust 'member.id' and 'member.name' based on your actual API response structure
+        option.value = member.id; 
+        option.textContent = member.user.name || member.user.email; // Fallback if name is missing
+        paidBySelect.appendChild(option);
+
+        // --- B. Populate Split List ---
+        const rowDiv = document.createElement('div');
+        // Maintain the exact classes needed for the submit logic
+        rowDiv.className = 'd-flex align-items-center p-2 border rounded member-split-row';
+        rowDiv.setAttribute('data-user-id', member.id);
+
+        // Create the Input element specifically so we can attach events to it
+        const amountInput = document.createElement('input');
+        amountInput.type = 'number';
+        amountInput.className = 'form-control text-end split-input';
+        amountInput.value = '0.00';
+        amountInput.placeholder = '0.00';
+
+        // Triggers calculation whenever the user types in this specific box
+        amountInput.addEventListener('input', updateSplitTotal);
+        const totalAmount = document.querySelector("#expenseAmount")
+        totalAmount.addEventListener('input', updateSplitTotal);
+
+        // Construct the row HTML, inserting our input object
+        rowDiv.innerHTML = `<div class="flex-grow-1">${member.user.name || member.user.email}</div>
+                            <div class="input-group" style="min-width:120px; max-width:fit-content;">
+                                <span class="input-group-text">$</span>
+                            </div>`;
+        
+        // Append the input manually to the input-group div
+        rowDiv.querySelector('.input-group').appendChild(amountInput);
+        splitContainer.appendChild(rowDiv);
+    });
+}
+
+// 3. Run on Page Load
+document.addEventListener('DOMContentLoaded', () => {
+    // Example: Set Group ID if not already set
+    initializeExpenseForm();
+});
+
+document.getElementById('submitExpenseBtn').addEventListener('click', async function() {
+        
+        // 2. Gather Basic Form Data
+        const amount = parseFloat(document.getElementById('expenseAmount').value) || 0;
+        const name = document.getElementById('expenseName').value;
+        const description = document.getElementById('expenseDescription').value;
+        const paidBy = parseInt(document.getElementById('paidBy').value);
+        const paymentDate = document.getElementById('paymentDate').value; // YYYY-MM-DD
+        
+        // Validation (Basic)
+        if (!name || amount <= 0 || isNaN(paidBy)) {
+            alert("Please fill in Name, Amount, and Payer.");
+            return;
+        }
+        // 1. Get Main Amount
+        const mainAmount = parseFloat(document.getElementById('expenseAmount').value) || 0;
+        let splitTotal = 0;
+        document.querySelectorAll('.split-input').forEach(input => {
+        splitTotal += parseFloat(input.value) || 0;
+        });
+
+        // We use 0.01 to handle tiny floating point math errors
+        if (Math.abs(mainAmount - splitTotal) > 0.01) {
+            alert(`Error: Expense is $${mainAmount}, but splits add up to $${splitTotal.toFixed(2)}`);
+            return; // <--- This stops the code here. Request is not sent.
+        }
+
+        // 3. Gather Breakdowns (Splits)
+        const breakdowns = [];
+        const splitRows = document.querySelectorAll('.member-split-row');
+        
+        splitRows.forEach(row => {
+            const userId = parseInt(row.getAttribute('data-user-id'));
+            const inputVal = parseFloat(row.querySelector('.split-input').value) || 0;
+            
+            // Only add to breakdown if they owe money (or assume logic requires all members)
+            if (inputVal >= 0) {
+                breakdowns.push({
+                    debtor_id: userId,
+                    amount: inputVal
+                });
+            }
+        });
+
+        // 4. Construct the JSON Object (Pydantic Model)
+        const expenseData = {
+            name: name,
+            description: description,
+            payer_id: paidBy,
+            amount: amount,
+            payment_date: paymentDate ? new Date(paymentDate).toISOString() : new Date().toISOString(),
+            receipt_path: null,
+            breakdowns: breakdowns
+        };
+
+        // 5. Prepare FormData (Multipart)
+        const formData = new FormData();
+        
+        // A. Add the JSON object as a string field named 'expense'
+        // This matches: expense: Json[ExpenseCreate] in your FastAPI route
+        formData.append('expense', JSON.stringify(expenseData));
+        
+        // B. Add the file (if one is selected)
+        const fileInput = document.getElementById('formFile');
+        if (fileInput.files.length > 0) {
+            formData.append('file', fileInput.files[0]);
+        }
+
+        // 6. Send Request
+        try {
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                // Note: Do NOT set 'Content-Type': 'multipart/form-data' manually.
+                // The browser sets the boundary automatically when using FormData.
+                body: formData 
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                console.log("Success:", result);
+                alert("Expense added successfully!");
+                // Optional: Redirect or clear form
+                window.location.href = "/#";
+            } else {
+                const errorData = await response.json();
+                console.error("Error:", errorData);
+                alert("Failed to add expense: " + (errorData.detail || "Unknown error"));
+            }
+        } catch (error) {
+            console.error("Network Error:", error);
+            alert("Network error occurred.");
+        }
+    });
+
+function updateSplitTotal() {
+    const splitInputs = document.querySelectorAll('.split-input');
+    const mainAmountInput = document.getElementById('expenseAmount');
+    const totalDisplay = document.getElementById('splitTotalDisplay');
+    
+    let currentSplitTotal = 0;
+    const mainAmount = parseFloat(mainAmountInput.value) || 0;
+
+    // Sum up all split inputs
+    splitInputs.forEach(input => {
+        currentSplitTotal += parseFloat(input.value) || 0;
+    });
+
+    // Update the text
+    totalDisplay.textContent = `$${currentSplitTotal.toFixed(2)}`;
+
+    // Optional: Visual Feedback (Red if doesn't match total, Green if matches)
+    // We use a small epsilon (0.01) for float comparison
+    if (Math.abs(currentSplitTotal - mainAmount) > 0.01) {
+        totalDisplay.classList.remove('text-success');
+        totalDisplay.classList.add('text-danger'); // Bootstrap red class
+    } else {
+        totalDisplay.classList.remove('text-danger');
+        totalDisplay.classList.add('text-success'); // Bootstrap green class
+    }
+    return currentSplitTotal, mainAmount
+}
+</script>
 
 {% endblock %}

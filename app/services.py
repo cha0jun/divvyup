@@ -4,12 +4,8 @@ from .crud import get_expense_group, get_member, create_member, get_member_by_me
 from .models import ExpenseGroup, Member, User, Expense
 from sqlalchemy.exc import IntegrityError
 
-
-
-
 def validate_expense_group(db: Session, group_id:int, error_detail: str | None) -> ExpenseGroup:
     db_group = get_expense_group(db, group_id)
-    print(f"validate_expense_group: group_id={group_id}, db_group={db_group}")
     if not db_group:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail= error_detail)
     return db_group

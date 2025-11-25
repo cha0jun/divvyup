@@ -94,9 +94,9 @@ async def read_root(request: Request, user: UserOptional, group_id:int):
         {"request": request, "user": user, "group_id":group_id} 
     )
 
-@app.get("/expenses/{expense_id}", response_class=HTMLResponse)
-async def read_root(request: Request, user: UserOptional, expense_id:int):
+@app.get("/groups/{group_id}/expenses/{expense_id}", response_class=HTMLResponse)
+async def read_root(request: Request, user: UserOptional, expense_id:int, group_id:int):
     return templates.TemplateResponse(
         "pages/expense_form.html", 
-        {"request": request, "user": user, "expense_id":expense_id} 
+        {"request": request, "user": user, "expense_id":expense_id, "group_id":group_id}
     )

@@ -334,7 +334,7 @@ function updateLinks() {
 
     // Update all links with group_id
     document.getElementById('recurringExpensesLink').href = `/groups/${groupId}/recurring-expenses`;
-    document.getElementById('addExpenseLink').href = `/groups/${groupId}/add-expense`;
+    document.getElementById('addExpenseLink').href = `/groups/${groupId}/expenses/0`;
     document.getElementById('addRecurringExpenseLink').href = `/groups/${groupId}/add-recurring-expense`;
     document.getElementById('viewAllExpensesLink').href = `/groups/${groupId}/expenses`;
     document.getElementById('viewAllExpensesLink2').href = `/groups/${groupId}/expenses`;

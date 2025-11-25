@@ -1,11 +1,12 @@
-from fastapi import APIRouter, status, UploadFile, File
-from pydantic import Json
+from fastapi import APIRouter, status, UploadFile, File, Form
+from pydantic import ValidationError
 from ..schemas import *
 from ..database import *
 from ..auth import UserDep
 from ..crud import *
 from ..services import *
 import uuid
+from fastapi.responses import FileResponse
 
 
 router = APIRouter(
@@ -40,6 +41,41 @@ async def create_receipt(file: UploadFile | None = None):
 
     return file_path
 
+@router.get("/{expense_id}/groups/{group_id}/receipt")
+def get_receipt(
+    group_id: int, 
+    expense_id: int, 
+    db: SessionDep, 
+    current_user: UserDep
+):
+    """
+    Download the receipt image associated with an expense.
+    """
+    # 1. Validate Access
+    validate_expense_group(db, group_id, "Expense group not found.")
+    validate_group_member(db, current_user.id, group_id, "Only members can view receipts.")
+
+    # 2. Fetch Expense from DB
+    # (Assuming your Expense model is named 'Expense')
+    expense = get_expense(db, expense_id)
+
+    # 3. Check if file exists on disk
+    # This handles both absolute paths and paths relative to your project root
+    file_path = expense.receipt_path
+    
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="Receipt file missing from server storage.")
+
+    # 4. Return the file
+    # 'filename' parameter tells the browser what to name the file when downloading
+    download_name = os.path.basename(file_path)
+    
+    return FileResponse(
+        path=file_path, 
+        filename=download_name,
+        media_type="application/octet-stream" # Forces download usually, or use "image/jpeg" to view
+    )
+
 #------Expense Routes-------
 @router.get("/{group_id}", response_model=List[ExpenseRead])
 def get_expenses_bl(group_id:int,  db: SessionDep, current_user: UserDep):
@@ -61,31 +97,40 @@ def get_expense_by_id_bl(group_id:int, expense_id:int, db: SessionDep, current_u
 
 
 @router.post("/{group_id}", response_model=ExpenseRead,status_code=status.HTTP_201_CREATED)
-async def create_expense_bl(group_id:int, expense:Json[ExpenseCreate], db: SessionDep, current_user: UserDep, file: UploadFile | None = File(None)):
+async def create_expense_bl(group_id:int, db: SessionDep, current_user: UserDep,expense:str = Form(...), file: UploadFile | None = File(None)):
       
     """
     Create a new expense with breakdowns (splits).
     The sum of breakdown amounts must equal the expense amount.
     """
+    
+    try:
+    # For Pydantic V2:
+        expense_model = ExpenseCreate.model_validate_json(expense)
+        
+        # If you are using Pydantic V1, use this instead:
+        # expense_model = ExpenseCreate.parse_raw(expense)
+    except ValidationError as e:
+        raise HTTPException(status_code=422, detail=e.errors())
       
     validate_expense_group(db, group_id, "Expense group not found.")
     validate_group_member(db, current_user.id, group_id, "Only members can add group expenses")
-    validate_group_member(db, expense.payer_id, group_id, "Payer must be a group member")
+    validate_group_member(db, expense_model.payer_id, group_id, "Payer must be a group member")
 
-    for breakdown in expense.breakdowns:
+    for breakdown in expense_model.breakdowns:
         validate_group_member(db, breakdown.debtor_id, group_id, "All debtors must be group members")
         
     if file:
         path = await create_receipt(file)
-        expense.receipt_path = path
+        expense_model.receipt_path = path
     else:
         print('no file')
     
-    created_expense = create_expense(db, expense, group_id,current_user)
+    created_expense = create_expense(db, expense_model, group_id,current_user)
     create_audit(
         db,
         AuditRead(
-            change_description= f'Expense {expense.name} created by {current_user.name}.',
+            change_description= f'Expense {expense_model.name} created by {current_user.name}.',
             expense_group_id = group_id,
             created_by= current_user.id,
             created_on= datetime.now()
@@ -96,16 +141,30 @@ async def create_expense_bl(group_id:int, expense:Json[ExpenseCreate], db: Sessi
     
     return created_expense
   
-@router.patch("/{expense_id}", response_model=ExpenseRead)
-def update_expense_bl(group_id:int, expense_id:int, expense: ExpenseUpdate, db: SessionDep, current_user: UserDep):
+@router.patch("/{expense_id}/groups/{group_id}", response_model=ExpenseRead)
+async def update_expense_bl(group_id:int, expense_id:int, db: SessionDep, current_user: UserDep, file: UploadFile | None = File(None),expense: str=Form(...)):
+    try:
+    # For Pydantic V2:
+        expense_model = ExpenseUpdate.model_validate_json(expense)
+        
+        # If you are using Pydantic V1, use this instead:
+        # expense_model = ExpenseCreate.parse_raw(expense)
+    except ValidationError as e:
+        raise HTTPException(status_code=422, detail=e.errors())
     validate_expense_group(db, group_id, "Expense group not found.")
     validate_group_member(db, current_user.id, group_id, "Only members can update group expenses")
     
-    updated_expense = update_expense(db, expense, expense_id, current_user)
+    if file:
+        path = await create_receipt(file)
+        expense_model.receipt_path = path
+    else:
+        print('no file')
+    
+    updated_expense = update_expense(db, expense_model, expense_id, current_user)
     create_audit(
         db,
         AuditRead(
-            change_description= f'Expense {expense.name} updated by {current_user.name}.',
+            change_description= f'Expense {expense_model.name} updated by {current_user.name}.',
             expense_group_id = group_id,
             created_by= current_user.id,
             created_on= datetime.now()
