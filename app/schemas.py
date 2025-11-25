@@ -95,6 +95,12 @@ class BreakdownRead(BreakdownBase):
     debtor: UserRead
     model_config = ConfigDict(from_attributes=True)
 
+## ---------Recurring Expense Schemas--------
+class RecurringExpenseBase(BaseModel):
+    frequency: str
+    start_date: datetime
+    end_date: datetime
+
 # ---------Expense Schemas--------
  
 class ExpenseBase(BaseModel):
@@ -109,6 +115,7 @@ class ExpenseBase(BaseModel):
     
 class ExpenseCreate(ExpenseBase):
     breakdowns: List[BreakdownCreate]
+    recurring: RecurringExpenseBase | None = None
 
     @field_validator('breakdowns')
     @classmethod
@@ -125,29 +132,34 @@ class ExpenseCreate(ExpenseBase):
         return breakdowns
 
 
-class ExpenseUpdate(BaseModel):
-    name: Optional[str] = None
-    description: Optional[str] = None
-    amount: Optional[float] = None
-    payment_date: Optional[datetime] = None
-    payer_id: Optional[int] = None
-    breakdowns: Optional[List[BreakdownCreate]] = None
-    receipt_path: Optional[str] = None
+class ExpenseUpdate(ExpenseBase):
+    breakdowns: List[BreakdownCreate]
+    recurring: RecurringExpenseBase | None = None
+
+    @field_validator('breakdowns')
+    @classmethod
+    def validate_breakdowns(cls, breakdowns: List[BreakdownCreate], info):
+        if not breakdowns:
+            raise ValueError("At least one breakdown is required")
+        
+        # Optional: Validate total of breakdowns matches expense amount
+        total = sum(b.amount for b in breakdowns)
+        amount = info.data.get('amount')
+        if amount and abs(total - amount) > 0.01:  # Allow for rounding
+            raise ValueError(f"Breakdown total ({total}) must equal expense amount ({amount})")
+        
+        return breakdowns
 
 class ExpenseRead(ExpenseBase):
     id: int
     expense_group_id: int
     payer: UserRead
     breakdowns: List[BreakdownRead] = []
+    recurring: RecurringExpenseBase | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
 
-## ---------Recurring Expense Schemas--------
-class RecurringExpenseBase(BaseModel):
-    frequency: str
-    start_date: datetime
-    end_date: datetime
 
 ## to create delete when nesscessary
 

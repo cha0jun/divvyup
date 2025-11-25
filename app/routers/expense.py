@@ -86,13 +86,13 @@ def get_expenses_bl(group_id:int,  db: SessionDep, current_user: UserDep):
     return expenses
     
 
-@router.get("/{expense_id}", response_model=ExpenseRead)
+@router.get("/{expense_id}/groups/{group_id}", response_model=ExpenseRead)
 def get_expense_by_id_bl(group_id:int, expense_id:int, db: SessionDep, current_user: UserDep):
     validate_expense_group(db, group_id, "Expense group not found.")
     validate_group_member(db, current_user.id, group_id, "Only members can view group expenses")
     
     e = validate_expense_in_group(db, expense_id, group_id, "Expense not found in this group")
-
+    
     return e
 
 
@@ -127,6 +127,10 @@ async def create_expense_bl(group_id:int, db: SessionDep, current_user: UserDep,
         print('no file')
     
     created_expense = create_expense(db, expense_model, group_id,current_user)
+    
+    if expense_model.recurring:
+        create_recurring_expense(db, expense_model.recurring, created_expense.id, current_user)
+    
     create_audit(
         db,
         AuditRead(
@@ -161,6 +165,8 @@ async def update_expense_bl(group_id:int, expense_id:int, db: SessionDep, curren
         print('no file')
     
     updated_expense = update_expense(db, expense_model, expense_id, current_user)
+    if expense_model.recurring:
+        create_recurring_expense(db, expense_model.recurring, expense_id, current_user)
     create_audit(
         db,
         AuditRead(

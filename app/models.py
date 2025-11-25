@@ -107,7 +107,24 @@ class Member(SQLModel, table = True):
     group: ExpenseGroup = Relationship(back_populates="members")
     
  
-
+class RecurringExpense(SQLModel, table=True):
+    __tablename__ = "recurring_expense"
+    
+    expense_id: int = Field(primary_key=True, foreign_key="expense.id")
+    frequency: str 
+    start_date: datetime #removed default. User must provide
+    end_date: datetime
+    created_by: int = Field(foreign_key="user.id")
+    created_on: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        sa_column=Column(DateTime, nullable=False)
+    )
+    modified_by: int = Field(foreign_key="user.id")
+    modified_on: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        sa_column=Column(DateTime, nullable=False)
+    )
+    expenses: Optional["Expense"] = Relationship(back_populates="recurring")
     
 class Expense(SQLModel, table=True):
     __tablename__ = "expense"
@@ -133,6 +150,7 @@ class Expense(SQLModel, table=True):
     
     payer: User = Relationship(back_populates="paid_for", sa_relationship_kwargs={"foreign_keys": "[Expense.payer_id]"})
     group: ExpenseGroup = Relationship(back_populates="expenses")
+    recurring: RecurringExpense = Relationship(back_populates="expenses")
     breakdowns: List["Breakdown"] = Relationship(
     back_populates="expense",
     sa_relationship_kwargs={
@@ -221,24 +239,7 @@ class Payment(SQLModel, table=True):
 #     )
     
 #     payment: Payment = Relationship(back_populates="receipts")
-
-class RecurringExpense(SQLModel, table=True):
-    __tablename__ = "recurring_expense"
-    
-    expense_id: int = Field(primary_key=True, foreign_key="expense.id")
-    frequency: str 
-    start_date: datetime #removed default. User must provide
-    end_date: datetime
-    created_by: int = Field(foreign_key="user.id")
-    created_on: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
-        sa_column=Column(DateTime, nullable=False)
-    )
-    modified_by: int = Field(foreign_key="user.id")
-    modified_on: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
-        sa_column=Column(DateTime, nullable=False)
-    ) 
+ 
     
 class Audit(SQLModel, table = True):
     __tablename__ = "audit"

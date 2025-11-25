@@ -5,238 +5,296 @@
 {% endblock %}
 
 {% block content %} 
-  <div class="container my-4">
-        <div class="main-container p-4">
-            <!-- ======================= -->
-            <!-- == Header Section == -->
-            <!-- ======================= -->
-            <header class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
-                <div class="d-flex align-items-center">
-                    <a href="#" class="text-dark me-3"><i class="bi bi-arrow-left fs-4"></i></a>
-                    <h1 class="h4 mb-0">Add Expense</h1>
+    
+<div class="container my-4">
+    <div class="main-container p-4">
+        <!-- Header -->
+        <header class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
+            <div class="d-flex align-items-center">
+                <a href="#" class="text-dark me-3"><i class="bi bi-arrow-left fs-4"></i></a>
+                <!-- Dynamic Title -->
+                <h1 class="h4 mb-0" id="pageTitle">Add Expense</h1>
+            </div>
+        </header>
+
+        <!-- Form -->
+        <form id="expenseForm">
+            <!-- Amount -->
+            <div class="mb-3">
+                <label for="expenseAmount" class="form-label">Amount</label>
+                <div class="input-group">
+                    <span class="input-group-text">$</span>
+                    <input type="number" class="form-control" id="expenseAmount" placeholder="0.00" step="0.01">
                 </div>
-            </header>
-                <!-- == Form == -->
-                    <form>
-                        <!-- Amount -->
-                        <div class="mb-3">
-                            <label for="expenseAmount" class="form-label">Amount</label>
-                            <div class="input-group">
-                                <span class="input-group-text">$</span>
-                                <input type="number" class="form-control" id="expenseAmount" placeholder="0.00">
-                            </div>
-                        </div>
+            </div>
 
-                        <!-- Expense Name -->
-                        <div class="mb-3">
-                            <label for="expenseName" class="form-label">Expense Name</label>
-                            <input type="text" class="form-control" id="expenseName" placeholder="Enter expense name">
-                        </div>
+            <!-- Expense Name -->
+            <div class="mb-3">
+                <label for="expenseName" class="form-label">Expense Name</label>
+                <input type="text" class="form-control" id="expenseName" placeholder="Enter expense name">
+            </div>
 
-                        <!-- Description -->
-                        <div class="mb-3">
-                            <label for="expenseDescription" class="form-label">Description</label>
-                            <textarea class="form-control" id="expenseDescription" rows="3" placeholder="Add a description..."></textarea>
-                        </div>
+            <!-- Description -->
+            <div class="mb-3">
+                <label for="expenseDescription" class="form-label">Description</label>
+                <textarea class="form-control" id="expenseDescription" rows="3" placeholder="Add a description..."></textarea>
+            </div>
 
-                        <!-- Payment Date -->
-                        <div class="mb-3">
-                            <label for="paymentDate" class="form-label">Payment Date</label>
-                            <input type="date" class="form-control" id="paymentDate">
-                        </div>
+            <!-- Payment Date -->
+            <div class="mb-3">
+                <label for="paymentDate" class="form-label">Payment Date</label>
+                <input type="date" class="form-control" id="paymentDate">
+            </div>
 
-                        <!-- Paid by -->
-                        <div class="mb-4">
-                            <label for="paidBy" class="form-label">Paid by</label>
-                            <select class="form-select" id="paidBy">
-                            </select>
-                        </div>
-                        
-                        <!-- How should this be split? -->
-                            <label class="form-label">How should this be split?</label>
-                        <!-- Member List for Splitting -->
-                        <div class="d-flex flex-column gap-2 mb-3" id="splitMembersContainer">
-                            <div class="text-center text-muted">Loading members...</div>
-                        </div>                            
-                        <!-- Total Amount -->
-                        <div class="d-flex justify-content-end fw-bold mb-4">
-                            <span>Total Split Amount:</span>
-                            <span class="ms-2" id="splitTotalDisplay">$0.00</span>
-                        </div>
-                        <!-- Receipt Dropzone -->
-                        <div class="form-control">
-                            <div class="mb-3 text-muted">
-                                <label for="formFile" class="form-label">Upload receipts</label>
-                                <input class="form-control" type="file" id="formFile">
-                            </div>
-                        </div>
-                    </form>
-                    <!-- Action Buttons -->
-                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
-                            <button onclick="javascript:history.back()" type="button" class="btn btn-light border px-4">Cancel</button>
-                            <button type="button" class="btn btn-dark px-4" id="submitExpenseBtn">Add Expense</button>
-                        </div>
+            <!-- Paid by -->
+            <div class="mb-4">
+                <label for="paidBy" class="form-label">Paid by</label>
+                <select class="form-select" id="paidBy"></select>
+            </div>
+            
+            <!-- Splitting -->
+            <label class="form-label">How should this be split?</label>
+            <div class="d-flex flex-column gap-2 mb-3" id="splitMembersContainer">
+                <div class="text-center text-muted">Loading members...</div>
+            </div>                            
+            
+            <!-- Total Amount Check -->
+            <div class="d-flex justify-content-end fw-bold mb-4">
+                <span>Total Split Amount:</span>
+                <span class="ms-2" id="splitTotalDisplay">$0.00</span>
+            </div>
+
+            <!-- Receipt Dropzone -->
+            <div class="form-control mb-3">
+                <div class="mb-3 text-muted">
+                    <label for="formFile" class="form-label">Upload receipts</label>
+                    <!-- Visual indicator for existing file -->
+                    <div id="existingReceiptParams" class="d-none mb-2 p-2 bg-light border rounded small">
+                        <i class="bi bi-paperclip me-2"></i> 
+                        <span id="existingReceiptName">Existing Receipt Attached</span>
+                        <span class="text-muted ms-2">(Upload new file to replace)</span>
                     </div>
+                    <input class="form-control" type="file" id="formFile">
+                </div>
+            </div>
+            
+        <!-- Recurring Expense Toggle -->
+        <div class="mb-3">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" role="switch" id="isRecurring">
+                <label class="form-check-label fw-medium" for="isRecurring">Make this a recurring expense</label>
+            </div>
+        </div>
+
+        <!-- Recurring Details Section (Hidden by default) -->
+        <div id="recurringSection" class="d-none card card-body bg-light border-0 mb-4">
+            <h6 class="text-uppercase small text-muted mb-3">Recurring Settings</h6>
+            
+            <div class="row g-3">
+                <!-- Frequency -->
+                <div class="col-12">
+                    <label for="recFrequency" class="form-label small">Frequency</label>
+                    <select class="form-select" id="recFrequency">
+                        <option value="" selected disabled>Select frequency</option>
+                        <option value="Daily">Daily</option>
+                        <option value="Weekly">Weekly</option>
+                        <option value="Monthly">Monthly</option>
+                        <option value="Yearly">Yearly</option>
+                    </select>
+                </div>
+
+                <!-- Start Date -->
+                <div class="col-6">
+                    <label for="recStartDate" class="form-label small">Start Date</label>
+                    <input type="date" class="form-control" id="recStartDate">
+                </div>
+
+                <!-- End Date -->
+                <div class="col-6">
+                    <label for="recEndDate" class="form-label small">End Date</label>
+                    <input type="date" class="form-control" id="recEndDate">
                 </div>
             </div>
         </div>
+  
+        </form>
+
+        <!-- Action Buttons -->
+        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+            <button onclick="javascript:history.back()" type="button" class="btn btn-light border px-4">Cancel</button>
+            <button type="button" class="btn btn-dark px-4" id="submitExpenseBtn">Add Expense</button>
+        </div>
     </div>
+</div>
+
+  
 
 <script src="/static/js/common.js"></script>
 <script>
-const groupId = "{{ group_id }}"; // You might get this from the URL or local storage
-const apiUrl = `/api/expenses/${groupId}`; 
+// Configuration
+const groupId = "{{ group_id }}"; 
+// If expense_id is passed from the server (e.g. "123"), we are in EDIT mode.
+// If it is None/Empty, we are in CREATE mode.
+const expenseId = "{{ expense_id|default('') }}";
+
+// Determine URLs based on mode
+const createUrl = `/api/expenses/${groupId}`;
+const updateUrl = `/api/expenses/${expenseId}/groups/${groupId}`; // Adjust based on your actual update route
+const getExpenseUrl = `/api/expenses/${expenseId}/groups/${groupId}`; // URL to fetch single expense
+
+// ---------------------------------------------------------
+// 1. Initialization Logic
+// ---------------------------------------------------------
 async function initializeExpenseForm() {
+    // A. First, build the member list (We need this DOM ready before populating splits)
     const members = await fetchGroupMembers(groupId);
-    // Select the DOM elements
+    renderMemberRows(members);
+
+    // B. Check if we are in Edit Mode
+    if (expenseId != 0) {
+        setupEditMode();
+        await fetchAndPopulateExpense();
+    }
+}
+
+function renderMemberRows(members) {
     const paidBySelect = document.getElementById('paidBy');
     const splitContainer = document.getElementById('splitMembersContainer');
 
-    // Clear existing content (remove hardcoded HTML or loading text)
     splitContainer.innerHTML = '';
-    
-    // Reset Dropdown but keep the default "Select member" option
     paidBySelect.innerHTML = '<option value="" selected disabled>Select member</option>';
 
-    // Loop through members and create elements
     members.forEach(member => {
-        // --- A. Populate "Paid By" Dropdown ---
+        // Dropdown
         const option = document.createElement('option');
-        // Adjust 'member.id' and 'member.name' based on your actual API response structure
         option.value = member.id; 
-        option.textContent = member.user.name || member.user.email; // Fallback if name is missing
+        option.textContent = member.user.name || member.user.email; 
         paidBySelect.appendChild(option);
 
-        // --- B. Populate Split List ---
+        // Split Row
         const rowDiv = document.createElement('div');
-        // Maintain the exact classes needed for the submit logic
         rowDiv.className = 'd-flex align-items-center p-2 border rounded member-split-row';
         rowDiv.setAttribute('data-user-id', member.id);
 
-        // Create the Input element specifically so we can attach events to it
         const amountInput = document.createElement('input');
         amountInput.type = 'number';
         amountInput.className = 'form-control text-end split-input';
         amountInput.value = '0.00';
         amountInput.placeholder = '0.00';
+        amountInput.step = '0.01'; // Important for validation
 
-        // Triggers calculation whenever the user types in this specific box
+        // Attach listeners
         amountInput.addEventListener('input', updateSplitTotal);
-        const totalAmount = document.querySelector("#expenseAmount")
-        totalAmount.addEventListener('input', updateSplitTotal);
 
-        // Construct the row HTML, inserting our input object
         rowDiv.innerHTML = `<div class="flex-grow-1">${member.user.name || member.user.email}</div>
                             <div class="input-group" style="min-width:120px; max-width:fit-content;">
                                 <span class="input-group-text">$</span>
                             </div>`;
         
-        // Append the input manually to the input-group div
         rowDiv.querySelector('.input-group').appendChild(amountInput);
         splitContainer.appendChild(rowDiv);
     });
-}
 
-// 3. Run on Page Load
-document.addEventListener('DOMContentLoaded', () => {
-    // Example: Set Group ID if not already set
-    initializeExpenseForm();
-});
+    // --- Recurring Toggle Logic ---
+    const recurringCheckbox = document.getElementById('isRecurring');
+    const recurringSection = document.getElementById('recurringSection');
 
-document.getElementById('submitExpenseBtn').addEventListener('click', async function() {
-        
-        // 2. Gather Basic Form Data
-        const amount = parseFloat(document.getElementById('expenseAmount').value) || 0;
-        const name = document.getElementById('expenseName').value;
-        const description = document.getElementById('expenseDescription').value;
-        const paidBy = parseInt(document.getElementById('paidBy').value);
-        const paymentDate = document.getElementById('paymentDate').value; // YYYY-MM-DD
-        
-        // Validation (Basic)
-        if (!name || amount <= 0 || isNaN(paidBy)) {
-            alert("Please fill in Name, Amount, and Payer.");
-            return;
-        }
-        // 1. Get Main Amount
-        const mainAmount = parseFloat(document.getElementById('expenseAmount').value) || 0;
-        let splitTotal = 0;
-        document.querySelectorAll('.split-input').forEach(input => {
-        splitTotal += parseFloat(input.value) || 0;
-        });
-
-        // We use 0.01 to handle tiny floating point math errors
-        if (Math.abs(mainAmount - splitTotal) > 0.01) {
-            alert(`Error: Expense is $${mainAmount}, but splits add up to $${splitTotal.toFixed(2)}`);
-            return; // <--- This stops the code here. Request is not sent.
-        }
-
-        // 3. Gather Breakdowns (Splits)
-        const breakdowns = [];
-        const splitRows = document.querySelectorAll('.member-split-row');
-        
-        splitRows.forEach(row => {
-            const userId = parseInt(row.getAttribute('data-user-id'));
-            const inputVal = parseFloat(row.querySelector('.split-input').value) || 0;
-            
-            // Only add to breakdown if they owe money (or assume logic requires all members)
-            if (inputVal >= 0) {
-                breakdowns.push({
-                    debtor_id: userId,
-                    amount: inputVal
-                });
-            }
-        });
-
-        // 4. Construct the JSON Object (Pydantic Model)
-        const expenseData = {
-            name: name,
-            description: description,
-            payer_id: paidBy,
-            amount: amount,
-            payment_date: paymentDate ? new Date(paymentDate).toISOString() : new Date().toISOString(),
-            receipt_path: null,
-            breakdowns: breakdowns
-        };
-
-        // 5. Prepare FormData (Multipart)
-        const formData = new FormData();
-        
-        // A. Add the JSON object as a string field named 'expense'
-        // This matches: expense: Json[ExpenseCreate] in your FastAPI route
-        formData.append('expense', JSON.stringify(expenseData));
-        
-        // B. Add the file (if one is selected)
-        const fileInput = document.getElementById('formFile');
-        if (fileInput.files.length > 0) {
-            formData.append('file', fileInput.files[0]);
-        }
-
-        // 6. Send Request
-        try {
-            const response = await fetch(apiUrl, {
-                method: 'POST',
-                // Note: Do NOT set 'Content-Type': 'multipart/form-data' manually.
-                // The browser sets the boundary automatically when using FormData.
-                body: formData 
-            });
-
-            if (response.ok) {
-                const result = await response.json();
-                console.log("Success:", result);
-                alert("Expense added successfully!");
-                // Optional: Redirect or clear form
-                window.location.href = "/#";
-            } else {
-                const errorData = await response.json();
-                console.error("Error:", errorData);
-                alert("Failed to add expense: " + (errorData.detail || "Unknown error"));
-            }
-        } catch (error) {
-            console.error("Network Error:", error);
-            alert("Network error occurred.");
+    recurringCheckbox.addEventListener('change', function() {
+        if (this.checked) {
+            recurringSection.classList.remove('d-none');
+        } else {
+            recurringSection.classList.add('d-none');
+            // Optional: Clear values when hiding
+            document.getElementById('recFrequency').value = "";
+            document.getElementById('recStartDate').value = "";
+            document.getElementById('recEndDate').value = "";
         }
     });
 
+    // Attach listener to main amount
+    document.getElementById('expenseAmount').addEventListener('input', updateSplitTotal);
+}
+
+function setupEditMode() {
+    document.getElementById('pageTitle').innerText = "Edit Expense";
+    document.getElementById('submitExpenseBtn').innerText = "Save Changes";
+}
+
+// ---------------------------------------------------------
+// 2. Fetch and Populate (Edit Mode Only)
+// ---------------------------------------------------------
+async function fetchAndPopulateExpense() {
+    try {
+        const response = await fetch(getExpenseUrl);
+        if (!response.ok) throw new Error("Could not fetch expense details");
+        
+        const data = await response.json();
+        
+        // 1. Fill Basic Fields
+        document.getElementById('expenseAmount').value = data.amount;
+        document.getElementById('expenseName').value = data.name;
+        document.getElementById('expenseDescription').value = data.description || "";
+        
+        // Handle Date (API is ISO, input needs YYYY-MM-DD)
+        if (data.date) {
+            document.getElementById('paymentDate').value = data.date.split('T')[0];
+        }
+
+        // Handle Payer Select
+        document.getElementById('paidBy').value = data.payer_id;
+
+        // Handle Receipt UI
+        if (data.receipt_path) {
+            const receiptBadge = document.getElementById('existingReceiptParams');
+            const receiptName = document.getElementById('existingReceiptName');
+            receiptBadge.classList.remove('d-none');
+            // Extract filename from path if possible, or just say "Current Receipt"
+            receiptName.innerText = "Current Receipt Attached";
+        }
+
+        // 2. Fill Splits (Breakdowns)
+        // Reset all to 0 first
+        document.querySelectorAll('.split-input').forEach(input => input.value = 0);
+
+        // Loop through saved breakdowns and find matching member rows
+        if (data.breakdowns) {
+            data.breakdowns.forEach(bd => {
+                // Find the row with data-user-id == debtor_id
+                const row = document.querySelector(`.member-split-row[data-user-id="${bd.debtor_id}"]`);
+                if (row) {
+                    const input = row.querySelector('.split-input');
+                    input.value = bd.amount;
+                }
+            });
+        }
+
+         // --- Recurring Population ---
+        if (data.recurring) { 
+            document.getElementById('isRecurring').checked = true;
+            document.getElementById('recurringSection').classList.remove('d-none');
+            
+            document.getElementById('recFrequency').value = data.recurring.frequency;
+            
+            if (data.recurring.start_date) {
+                document.getElementById('recStartDate').value = data.recurring.start_date.split('T')[0];
+            }
+            if (data.recurring.end_date) {
+                document.getElementById('recEndDate').value = data.recurring.end_date.split('T')[0];
+            }
+        }
+
+        // 3. Recalculate Totals so the UI is green
+        updateSplitTotal();
+
+    } catch (error) {
+        console.error("Error loading expense:", error);
+        alert("Failed to load expense details.");
+    }
+}
+
+// ---------------------------------------------------------
+// 3. Calculation Logic
+// ---------------------------------------------------------
 function updateSplitTotal() {
     const splitInputs = document.querySelectorAll('.split-input');
     const mainAmountInput = document.getElementById('expenseAmount');
@@ -245,25 +303,141 @@ function updateSplitTotal() {
     let currentSplitTotal = 0;
     const mainAmount = parseFloat(mainAmountInput.value) || 0;
 
-    // Sum up all split inputs
     splitInputs.forEach(input => {
         currentSplitTotal += parseFloat(input.value) || 0;
     });
 
-    // Update the text
     totalDisplay.textContent = `$${currentSplitTotal.toFixed(2)}`;
 
-    // Optional: Visual Feedback (Red if doesn't match total, Green if matches)
-    // We use a small epsilon (0.01) for float comparison
+    // Compare with epsilon 0.01
     if (Math.abs(currentSplitTotal - mainAmount) > 0.01) {
         totalDisplay.classList.remove('text-success');
-        totalDisplay.classList.add('text-danger'); // Bootstrap red class
+        totalDisplay.classList.add('text-danger');
     } else {
         totalDisplay.classList.remove('text-danger');
-        totalDisplay.classList.add('text-success'); // Bootstrap green class
+        totalDisplay.classList.add('text-success');
     }
-    return currentSplitTotal, mainAmount
 }
+
+// ---------------------------------------------------------
+// 4. Submit Logic (Handles Create AND Update)
+// ---------------------------------------------------------
+document.getElementById('submitExpenseBtn').addEventListener('click', async function() {
+    
+    const amount = parseFloat(document.getElementById('expenseAmount').value) || 0;
+    const name = document.getElementById('expenseName').value;
+    const description = document.getElementById('expenseDescription').value;
+    const paidBy = parseInt(document.getElementById('paidBy').value);
+    const paymentDate = document.getElementById('paymentDate').value; 
+
+    // Validation
+    if (!name || amount <= 0 || isNaN(paidBy)) {
+        alert("Please fill in Name, Amount, and Payer.");
+        return;
+    }
+
+    // Split Validation
+    let splitTotal = 0;
+    document.querySelectorAll('.split-input').forEach(input => {
+        splitTotal += parseFloat(input.value) || 0;
+    });
+
+    if (Math.abs(amount - splitTotal) > 0.01) {
+        alert(`Error: Total is $${amount}, but splits sum to $${splitTotal.toFixed(2)}`);
+        return;
+    }
+
+    
+
+    // Gather Breakdowns
+    const breakdowns = [];
+    document.querySelectorAll('.member-split-row').forEach(row => {
+        const userId = parseInt(row.getAttribute('data-user-id'));
+        const inputVal = parseFloat(row.querySelector('.split-input').value) || 0;
+        
+        if (inputVal > 0) { // Only send positive debts
+            breakdowns.push({ debtor_id: userId, amount: inputVal });
+        }
+    });
+    // --- Recurring Logic Start ---
+    const isRecurring = document.getElementById('isRecurring').checked;
+    let recurringData = null;
+
+    if (isRecurring) {
+        const freq = document.getElementById('recFrequency').value;
+        const startDate = document.getElementById('recStartDate').value;
+        const endDate = document.getElementById('recEndDate').value;
+
+        // Validate Recurring Fields
+        if (!freq || !startDate || !endDate) {
+            alert("Please fill in Frequency, Start Date, and End Date for recurring expenses.");
+            return;
+        }
+
+        recurringData = {
+            frequency: freq,
+            start_date: new Date(startDate).toISOString(),
+            end_date: new Date(endDate).toISOString()
+            // created_by/modified_by usually handled by backend based on current_user
+        };
+    }
+    // --- Recurring Logic End ---
+
+    // Payload
+    const expenseData = {
+        name: name,
+        description: description,
+        payer_id: paidBy,
+        amount: amount,
+        // Ensure date is sent (defaults to today if empty)
+        payment_date: paymentDate ? new Date(paymentDate).toISOString() : new Date().toISOString(),
+        breakdowns: breakdowns,
+        recurring: recurringData 
+    };
+
+    const formData = new FormData();
+    formData.append('expense', JSON.stringify(expenseData));
+
+    const fileInput = document.getElementById('formFile');
+    if (fileInput.files.length > 0) {
+        formData.append('file', fileInput.files[0]);
+    }
+
+    // Determine API Endpoint and Method
+    const targetUrl = expenseId != 0 ? updateUrl : createUrl;
+    const method = expenseId != 0 ? 'PATCH' : 'POST'; 
+
+    try {
+        const response = await fetch(targetUrl, {
+            method: method,
+            body: formData 
+        });
+
+        if (response.ok) {
+            alert(expenseId != 0 ? "Expense updated!" : "Expense added!");
+            // Redirect to group page
+            window.location.href = `/groups/${groupId}/expenses`;
+        } else {
+            const errorData = await response.json();
+            console.error("Error:", errorData);
+            
+            // Handle Pydantic validation errors nicely
+            let msg = "Failed to save.";
+            if (errorData.detail && Array.isArray(errorData.detail)) {
+                msg += "\n" + errorData.detail.map(e => e.msg).join("\n");
+            } else if (errorData.detail) {
+                msg += " " + errorData.detail;
+            }
+            alert(msg);
+        }
+    } catch (error) {
+        console.error("Network Error:", error);
+        alert("Network error occurred.");
+    }
+});
+
+// Run on Load
+document.addEventListener('DOMContentLoaded', initializeExpenseForm);
 </script>
 
 {% endblock %}

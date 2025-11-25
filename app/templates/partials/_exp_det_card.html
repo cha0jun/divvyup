@@ -37,7 +37,7 @@
                     </ul>
             </div>          
             <!-- Receipt Section -->
-            <div class="mb-4" id="receiptSection">
+            <div class="mb-4 pb-4 border-bottom" id="receiptSection">
                 <h6 class="text-muted text-uppercase small mb-3">Receipt</h6>
                 <div class="d-flex align-items-center justify-content-between p-3 border rounded" style="border-left: 5px solid #6c757d !important;">
                     
@@ -51,6 +51,29 @@
                     </a>
                 </div>
             </div>
+            <!-- == NEW: Recurring Section (Hidden by default) == -->
+            <div id="modal-recurring-section" class="d-none pb-4 mb-4 border-bottom">
+                <h6 class="text-primary text-uppercase small mb-3">
+                    <i class="bi bi-arrow-repeat me-1"></i> Recurring Schedule
+                </h6>
+                <div class="bg-light rounded p-3">
+                    <div class="row g-3">
+                        <div class="col-4 border-end">
+                            <span class="d-block text-muted small" style="font-size: 0.75rem;">Frequency</span>
+                            <span class="fw-semibold text-capitalize text-dark" id="modal-rec-freq"></span>
+                        </div>
+                        <div class="col-4 border-end">
+                            <span class="d-block text-muted small" style="font-size: 0.75rem;">Start Date</span>
+                            <span class="fw-medium text-dark" id="modal-rec-start"></span>
+                        </div>
+                        <div class="col-4">
+                            <span class="d-block text-muted small" style="font-size: 0.75rem;">End Date</span>
+                            <span class="fw-medium text-dark" id="modal-rec-end"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
     </div>
     <!-- == Footer Buttons == -->
     <div class="card-footer bg-white p-3 text-end">

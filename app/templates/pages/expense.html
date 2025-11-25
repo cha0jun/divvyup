@@ -142,7 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     const receiptSec = document.getElementById(`receiptSection`)
     const downloadBtn = document.getElementById(`modal-download`);
-    receiptSec.className=""
+    receiptSec.className="mb-4 pb-4 border-bottom"
     if (!expenseObject.receipt_path) {
       receiptSec.className="d-none";
       downloadBtn.href = '#';
@@ -151,6 +151,27 @@ document.addEventListener('DOMContentLoaded', () => {
       const downloadUrl = `/api/expenses/${expenseObject.id}/groups/${groupId}/receipt`;
       downloadBtn.href = downloadUrl;
     }
+
+    const recSection = document.getElementById('modal-recurring-section');
+
+  // Check if the recurring object exists and is not null
+if (expenseObject.recurring) {
+    // 1. Show the section
+    recSection.classList.remove('d-none');
+
+    // 2. Populate fields
+    document.getElementById('modal-rec-freq').textContent = expenseObject.recurring.frequency; // e.g., "Monthly"
+    
+    // Format dates (assuming ISO string input)
+    const startDate = new Date(expenseObject.recurring.start_date).toLocaleDateString();
+    const endDate = new Date(expenseObject.recurring.end_date).toLocaleDateString();
+
+    document.getElementById('modal-rec-start').textContent = startDate;
+    document.getElementById('modal-rec-end').textContent = endDate;
+  } else {
+    // 1. Hide the section if not recurring
+    recSection.classList.add('d-none');
+}
 
     // You can also dynamically update links, like an "Edit" button
     const editButton = document.getElementById(`modal-edit`);
