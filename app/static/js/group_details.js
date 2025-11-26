@@ -710,12 +710,7 @@ async function handleViewHistory(event) {
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    const viewHistoryLink = document.getElementById('viewHistoryLink');
-    if (viewHistoryLink) {
-        viewHistoryLink.addEventListener('click', handleViewHistory);
-    }
-});
+
 
 
 // Initialize when DOM is ready
@@ -743,8 +738,8 @@ document.addEventListener('DOMContentLoaded', () => {
 // });
 
 
-// This code listens for ANY modal to open on the page
-document.addEventListener('show.bs.modal', (event) => {
+// This code listens for ANY modal to open on the page - Will result in 405 error bcs lsiteners are added on load of modal and destroyed once request is sent 
+/* document.addEventListener('show.bs.modal', (event) => {
     // 'event.target' is the modal that is being opened
     const modal = event.target;
 
@@ -769,17 +764,49 @@ document.addEventListener('show.bs.modal', (event) => {
     else if (form.id === 'inviteMemberModalForm') {
         form.addEventListener('submit', handleInviteMember, { once: true });
     }
-});
+}); */
+
+// Remove ALL event listeners at the bottom of the file 
+// (including the 'show.bs.modal' block AND your existing 'DOMContentLoaded' blocks)
+// and replace them with this single block:
 
 document.addEventListener('DOMContentLoaded', () => {
+    // 1. Initialize page data
+    initializePage();
+
+    // --- Modal Form Listeners ---
+    const addMemberForm = document.getElementById('addMemberModalForm');
+    if (addMemberForm) {
+        addMemberForm.addEventListener('submit', handleAddMember);
+    }
+
+    const removeMemberForm = document.getElementById('removeMemberModalForm');
+    if (removeMemberForm) {
+        removeMemberForm.addEventListener('submit', handleRemoveMember);
+    }
+
+    const changeAdminForm = document.getElementById('changeAdminModalForm');
+    if (changeAdminForm) {
+        changeAdminForm.addEventListener('submit', handleChangeAdmin);
+    }
+
+    const editGroupForm = document.getElementById('editGroupModalForm');
+    if (editGroupForm) {
+        editGroupForm.addEventListener('submit', handleEditGroup);
+    }
+
+    const inviteMemberForm = document.getElementById('inviteMemberModalForm');
+    if (inviteMemberForm) {
+        inviteMemberForm.addEventListener('submit', handleInviteMember);
+    }
+    
     const deleteGroupLink = document.getElementById('deleteGroupLink');
     if (deleteGroupLink) {
         deleteGroupLink.addEventListener('click', handleDeleteGroup);
     }
+    
+    const viewHistoryLink = document.getElementById('viewHistoryLink');
+    if (viewHistoryLink) {
+        viewHistoryLink.addEventListener('click', handleViewHistory);
+    }
 });
-
-
-
-// 1. Initialize the main page content on load
-document.addEventListener('DOMContentLoaded', initializePage);
-
