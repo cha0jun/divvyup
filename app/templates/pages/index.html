@@ -5,20 +5,181 @@
 {% endblock %}
 
 {% block content %}
-    <div class="p-5 mb-4 bg-light rounded-3">
-        <div class="container-fluid py-5">
-            <h1 class="display-5 fw-bold">Welcome!</h1>
-            <p class="col-md-8 fs-4">This is the homepage for our amazing application, built with FastAPI and Bootstrap.</p>
-        </div>
-    </div>
-
-    <h2>Recent Items</h2>
-    <div class="row">
-        <!-- Let's imagine we passed a list of 'items' from FastAPI -->
-        {% for item in items %}
-            <div class="col-md-4">
-                {% include 'partials/_item_card.html' %}
+<section class="hero-section d-flex align-items-center min-vh-75">
+        <div class="container">
+            <div class="row align-items-center g-5">
+                <!-- Text Content -->
+                <div class="col-lg-6">
+                    <span class="badge bg-primary bg-opacity-10 text-primary mb-3 px-3 py-2 rounded-pill">
+                        <i class="bi bi-stars me-1"></i> The #1 Expense Tracker
+                    </span>
+                    <h1 class="display-4 fw-bold mb-4 lh-tight">
+                        Split bills, not <span class="text-primary">friendships</span>.
+                    </h1>
+                    <p class="lead text-muted mb-4">
+                        Keep track of shared expenses, balances, and recurring bills with housemates, trips, and groups. We do the math so you don't have to.
+                    </p>
+                    <div class="d-flex gap-3">
+                        <a href="/register" class="btn btn-primary btn-lg px-4 shadow-sm">Get Started Free</a>
+                        <a href="#how-it-works" class="btn btn-outline-secondary btn-lg px-4">Learn more</a>
+                    </div>
+                    
+                    <div class="mt-4 pt-3 border-top d-flex align-items-center gap-4 text-muted small">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i> Free for individuals
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i> No credit card required
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Visual / Illustration -->
+                <div class="col-lg-6">
+                    <div class="screenshot-placeholder p-4">
+                        <!-- Simulated App UI using Bootstrap classes -->
+                        <div class="border-bottom pb-3 mb-3 d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0 fw-bold">Trip to Japan 🇯🇵</h5>
+                            <span class="badge bg-danger">You owe $120.50</span>
+                        </div>
+                        <!-- List Items -->
+                        <div class="d-flex align-items-center p-3 mb-3 bg-light rounded">
+                            <div class="bg-white p-2 rounded shadow-sm me-3"><i class="bi bi-train-front fs-4 text-primary"></i></div>
+                            <div class="flex-grow-1">
+                                <div class="fw-medium">Shinkansen Tickets</div>
+                                <div class="text-muted small">Paid by Alice</div>
+                            </div>
+                            <div class="fw-bold">$320.00</div>
+                        </div>
+                        <div class="d-flex align-items-center p-3 mb-3 bg-light rounded">
+                            <div class="bg-white p-2 rounded shadow-sm me-3"><i class="bi bi-cup-hot fs-4 text-warning"></i></div>
+                            <div class="flex-grow-1">
+                                <div class="fw-medium">Morning Coffee</div>
+                                <div class="text-muted small">Paid by You</div>
+                            </div>
+                            <div class="fw-bold">$18.50</div>
+                        </div>
+                        <div class="d-flex align-items-center p-3 bg-light rounded">
+                            <div class="bg-white p-2 rounded shadow-sm me-3"><i class="bi bi-house fs-4 text-success"></i></div>
+                            <div class="flex-grow-1">
+                                <div class="fw-medium">Airbnb Tokyo</div>
+                                <div class="text-muted small">Paid by Bob</div>
+                            </div>
+                            <div class="fw-bold">$850.00</div>
+                        </div>
+                    </div>
+                </div>
             </div>
-        {% endfor %}
-    </div>
+        </div>
+    </section>
+
+    <!-- ======================= -->
+    <!-- == Features Section == -->
+    <!-- ======================= -->
+    <section class="py-5" id="features">
+        <div class="container py-5">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold">Everything you need to settle up</h2>
+                <p class="text-muted col-md-8 mx-auto">Stop hoarding receipts and doing mental math. Our platform handles the complex details for you.</p>
+            </div>
+            
+            <div class="row g-4">
+                <!-- Feature 1 -->
+                <div class="col-md-4">
+                    <div class="p-4 border rounded-4 h-100 hover-shadow bg-white">
+                        <div class="feature-icon-box bg-primary bg-opacity-10 text-primary">
+                            <i class="bi bi-people-fill fs-3"></i>
+                        </div>
+                        <h4 class="fw-bold h5">Group Management</h4>
+                        <p class="text-muted">Create groups for apartments, trips, or events. Add members easily and see exactly who is in the group.</p>
+                    </div>
+                </div>
+                <!-- Feature 2 -->
+                <div class="col-md-4">
+                    <div class="p-4 border rounded-4 h-100 hover-shadow bg-white">
+                        <div class="feature-icon-box bg-success bg-opacity-10 text-success">
+                            <i class="bi bi-receipt fs-3"></i>
+                        </div>
+                        <h4 class="fw-bold h5">Receipt Uploads</h4>
+                        <p class="text-muted">Never lose a receipt again. Upload photos of your bills directly to the expense for full transparency.</p>
+                    </div>
+                </div>
+                <!-- Feature 3 -->
+                <div class="col-md-4">
+                    <div class="p-4 border rounded-4 h-100 hover-shadow bg-white">
+                        <div class="feature-icon-box bg-warning bg-opacity-10 text-warning">
+                            <i class="bi bi-arrow-repeat fs-3"></i>
+                        </div>
+                        <h4 class="fw-bold h5">Recurring Expenses</h4>
+                        <p class="text-muted">Set up rent, internet, or Netflix to split automatically every month. Never miss a due date.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ======================= -->
+    <!-- == How it Works == -->
+    <!-- ======================= -->
+    <section class="py-5 bg-light" id="how-it-works">
+        <div class="container py-5">
+            <div class="row align-items-center">
+                <div class="col-lg-5 mb-4 mb-lg-0">
+                    <h2 class="fw-bold mb-4">Simple, powerful tracking</h2>
+                    
+                    <div class="d-flex mb-4">
+                        <div class="me-3">
+                            <div class="step-circle">1</div>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold">Create a Group</h5>
+                            <p class="text-muted">Start a group for your trip or house. Invite your friends via email.</p>
+                        </div>
+                    </div>
+
+                    <div class="d-flex mb-4">
+                        <div class="me-3">
+                            <div class="step-circle">2</div>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold">Add Expenses</h5>
+                            <p class="text-muted">Enter the amount, upload the receipt, and choose how to split it (equally or unequally).</p>
+                        </div>
+                    </div>
+
+                    <div class="d-flex">
+                        <div class="me-3">
+                            <div class="step-circle">3</div>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold">Settle Up</h5>
+                            <p class="text-muted">The app calculates exactly who owes whom. Pay your friends back and record the payment.</p>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="col-lg-6 offset-lg-1">
+                    <!-- Decorative Graphic -->
+                    <div class="bg-white p-5 rounded-4 shadow text-center">
+                        <i class="bi bi-wallet2 display-1 text-primary mb-3"></i>
+                        <h3 class="fw-bold">Total Balance</h3>
+                        <p class="display-4 fw-bold text-success my-3">+$450.00</p>
+                        <p class="text-muted">You are owed by 3 people</p>
+                        <button class="btn btn-outline-dark mt-3">View Details</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ======================= -->
+    <!-- == CTA Section == -->
+    <!-- ======================= -->
+    <section class="py-5 bg-dark text-white text-center">
+        <div class="container py-5">
+            <h2 class="display-5 fw-bold mb-3">Ready to get organized?</h2>
+            <p class="lead text-white-50 mb-4 col-md-6 mx-auto">Join thousands of users who are stress-free about their shared finances. Create your first group today.</p>
+            <a href="/register" class="btn btn-primary btn-lg px-5">Join Now</a>
+        </div>
+    </section>
 {% endblock %}

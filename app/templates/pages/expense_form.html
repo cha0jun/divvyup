@@ -6,7 +6,7 @@
 
 {% block content %} 
     
-<div class="container my-4">
+<div class="container">
     <div class="main-container p-4">
         <!-- Header -->
         <header class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
@@ -167,14 +167,14 @@ function renderMemberRows(members) {
     members.forEach(member => {
         // Dropdown
         const option = document.createElement('option');
-        option.value = member.id; 
+        option.value = member.user.id; 
         option.textContent = member.user.name || member.user.email; 
         paidBySelect.appendChild(option);
 
         // Split Row
         const rowDiv = document.createElement('div');
         rowDiv.className = 'd-flex align-items-center p-2 border rounded member-split-row';
-        rowDiv.setAttribute('data-user-id', member.id);
+        rowDiv.setAttribute('data-user-id', member.user.id);
 
         const amountInput = document.createElement('input');
         amountInput.type = 'number';

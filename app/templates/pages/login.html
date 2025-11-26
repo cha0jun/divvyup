@@ -48,7 +48,7 @@
             });
 
             if (response.ok) {
-                window.location.href = '/';
+                window.location.href = '/groups';
             } else {
                 const errorData = await response.json();
                 errorAlert.textContent = errorData.detail || 'An unknown error occurred.';

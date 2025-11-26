@@ -5,3 +5,40 @@
 td {
   max-width: 150px;
 }
+
+/* Custom touches to make Bootstrap look premium */
+.hero-section {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  overflow: hidden;
+}
+.feature-icon-box {
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+}
+.step-circle {
+  width: 40px;
+  height: 40px;
+  background-color: #212529;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+.screenshot-placeholder {
+  background-color: #ffffff;
+  border-radius: 1rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  transform: perspective(1000px) rotateY(-10deg) rotateX(5deg);
+  transition: transform 0.3s ease;
+}
+.screenshot-placeholder:hover {
+  transform: perspective(1000px) rotateY(0deg) rotateX(0deg);
+}
