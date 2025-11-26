@@ -120,9 +120,14 @@
         </form>
 
         <!-- Action Buttons -->
-        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
-            <button onclick="javascript:history.back()" type="button" class="btn btn-light border px-4">Cancel</button>
-            <button type="button" class="btn btn-dark px-4" id="submitExpenseBtn">Add Expense</button>
+        <div class="d-flex justify-content-between mt-4">
+            <div>
+                <button type="button" class="btn btn-danger border px-4 d-none" id="deleteExpenseBtn">Delete Expense</button>
+            </div>
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <button onclick="javascript:history.back()" type="button" class="btn btn-light border px-4">Cancel</button>
+                <button type="button" class="btn btn-dark px-4" id="submitExpenseBtn">Add Expense</button>
+            </div>
         </div>
     </div>
 </div>
@@ -136,6 +141,7 @@ const groupId = "{{ group_id }}";
 // If expense_id is passed from the server (e.g. "123"), we are in EDIT mode.
 // If it is None/Empty, we are in CREATE mode.
 const expenseId = "{{ expense_id|default('') }}";
+const userId = "{{user.id}}";
 
 // Determine URLs based on mode
 const createUrl = `/api/expenses/${groupId}`;
@@ -154,6 +160,47 @@ async function initializeExpenseForm() {
     if (expenseId != 0) {
         setupEditMode();
         await fetchAndPopulateExpense();
+    }
+
+    const isAdmin = await setupAdminPermissions(parseInt(groupId), parseInt(userId));
+    if (isAdmin) {
+        const deleteBtn = document.getElementById("deleteExpenseBtn");
+        deleteBtn.classList.remove("d-none");
+
+        // 2. Attach the Click Listener
+        deleteBtn.addEventListener('click', async function() {
+            
+            // A. Confirm Action
+            const confirmed = confirm("Are you sure you want to permanently delete this expense?");
+            if (!confirmed) return;
+
+            // B. Define URL (Matching your existing pattern)
+            // Endpoint: DELETE /api/expenses/{group_id}/{expense_id}
+            const deleteUrl = `/api/expenses/${expenseId}/groups/${groupId}`;
+
+            try {
+                // C. Send DELETE Request
+                const response = await fetch(deleteUrl, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                // D. Handle Response
+                if (response.ok) {
+                    alert("Expense deleted successfully.");
+                    // Redirect back to the Group Dashboard
+                    window.location.href = `/groups/${groupId}`;
+                } else {
+                    const errorData = await response.json();
+                    alert("Failed to delete: " + (errorData.detail || "Unknown error"));
+                }
+            } catch (error) {
+                console.error("Delete Error:", error);
+                alert("An error occurred while deleting.");
+            }
+        });
     }
 }
 

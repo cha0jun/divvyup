@@ -184,7 +184,7 @@ async def update_expense_bl(group_id:int, expense_id:int, db: SessionDep, curren
 @router.delete("/{expense_id}/groups/{group_id}",status_code=204)
 def delete_expense_bl(group_id:int, expense_id:int, db: SessionDep, current_user: UserDep):
     validate_expense_group(db, group_id, "Expense group not found.")
-    validate_group_member(db, current_user.id, group_id, "Only members can delete group expenses")
+    validate_group_member(db, current_user.id, group_id, "Only admins can delete group expenses")
     
     expense = get_expense(db, expense_id)
     delete_expense(db, expense_id)
