@@ -365,7 +365,6 @@ function updateLinks() {
 
 // Initialize page
 async function initializePage() {
-    console.log('✅ initializePage called');
     showLoading();
 
     try {
@@ -733,19 +732,10 @@ async function handleViewHistory(event) {
 
 
 
-// ===============================================
-// PAYMENT MODAL FUNCTIONALITY
-// ===============================================
-
 // Populate member dropdowns for payment modal
 function populatePaymentMemberDropdowns() {
     const addPayerSelect = document.getElementById('addPayerId');
     const addPayeeSelect = document.getElementById('addPayeeId');
-
-    console.log(' Attempting to populate payment dropdowns');
-    console.log('membersData:', membersData);
-    console.log('Payer dropdown element:', addPayerSelect);
-    console.log('Payee dropdown element:', addPayeeSelect);
 
     if (!membersData || membersData.length === 0) {
         console.warn('No members available for payment modal');
@@ -847,7 +837,7 @@ function setupPaymentModal() {
     }
 }
 
-// This code listens for ANY modal to open on the page
+
 document.addEventListener('show.bs.modal', (event) => {
     const modal = event.target;
 
@@ -872,11 +862,9 @@ document.addEventListener('show.bs.modal', (event) => {
     else if (form.id === 'inviteMemberModalForm') {
         form.addEventListener('submit', handleInviteMember, { once: true });
     }
-}); */
+});
 
-// Remove ALL event listeners at the bottom of the file 
-// (including the 'show.bs.modal' block AND your existing 'DOMContentLoaded' blocks)
-// and replace them with this single block:
+
 
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Initialize page data
