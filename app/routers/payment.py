@@ -68,7 +68,7 @@ def update_payment_bl(group_id:int, payment_id:int, payment: PaymentUpdate, db: 
     
     return updated_payment
 
-@router.delete("/{group_id}/payments/{expense_id}",status_code=204)
+@router.delete("/{group_id}/payments/{payment_id}",status_code=204)
 def delete_payment_bl(group_id:int, payment_id:int, db: SessionDep, current_user: UserDep):
     validate_expense_group(db, group_id, "Expense group not found.")
     validate_group_member(db, current_user.id, group_id, "Only members can delete group payments")

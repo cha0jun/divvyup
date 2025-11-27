@@ -1,3 +1,4 @@
+
 // Global state
 let groupData = null;
 let membersData = null;
@@ -121,27 +122,27 @@ async function fetchGroupBalances() {
 }
 
 // Fetch recent expenses 
-async function fetchRecentExpenses() {
-    try {
-        const response = await fetch(`/api/groups/${window.GROUP_ID}/expenses?limit=3`, {
-            credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
+// async function fetchRecentExpenses() {
+//     try {
+//         const response = await fetch(`/api/groups/${window.GROUP_ID}/expenses?limit=3`, {
+//             credentials: 'include',
+//             headers: {
+//                 'Content-Type': 'application/json'
+//             }
+//         });
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+//         if (!response.ok) {
+//             throw new Error(`HTTP error! status: ${response.status}`);
+//         }
 
-        expensesData = await response.json();
-        return expensesData;
-    } catch (error) {
-        console.error('Error fetching expenses:', error);
-        // Non-critical, just return empty array
-        return [];
-    }
-}
+//         expensesData = await response.json();
+//         return expensesData;
+//     } catch (error) {
+//         console.error('Error fetching expenses:', error);
+//         // Non-critical, just return empty array
+//         return [];
+//     }
+// }
 
 // Fetch Pending Invites ---
 async function fetchPendingInvites() {
@@ -231,7 +232,7 @@ function displayBalances() {
 
         const netBalance = currentUserBalance.net_balance;
 
-        // --- update the HTML with our three numbers ---
+        // --- update the HTML with three numbers ---
         document.getElementById('youAreOwed').textContent = formatCurrency(totalYouAreOwed);
         document.getElementById('youOwe').textContent = formatCurrency(totalYouOwe);
 
@@ -252,34 +253,53 @@ function displayBalances() {
     }
 }
 
-// Display recent expenses
-function displayRecentExpenses() {
-    const recentExpensesList = document.getElementById('recentExpensesList');
-
-    if (!expensesData || expensesData.length === 0) {
-        recentExpensesList.innerHTML = '<p class="text-muted mb-0">No expenses yet. Add your first expense to get started!</p>';
+function displayBalanceDetails() {
+    if (!balancesData || !currentMember) {
+        console.warn("displayBalanceDetails: Data or currentMember not ready");
         return;
     }
 
-    const expensesHTML = expensesData.slice(0, 3).map(expense => `
-        <div class="list-group-item">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h6 class="mb-1">${escapeHtml(expense.name)}</h6>
-                    ${expense.description ? `<small class="text-muted">${escapeHtml(expense.description)}</small><br>` : ''}
-                    <small class="text-muted">
-                        ${formatDate(expense.payment_date)}
-                    </small>
-                </div>
-                <div class="text-end">
-                    <strong>${formatCurrency(expense.amount)}</strong>
-                </div>
-            </div>
-        </div>
-    `).join('');
+    const currentUserName = currentMember.user.name;
+    const currentUserBalance = balancesData.balances[currentUserName];
 
-    recentExpensesList.innerHTML = `<div class="list-group">${expensesHTML}</div>`;
+    if (!currentUserBalance) {
+        console.warn(`No balance data found for user: ${currentUserName}`);
+        return;
+    }
+    const owedByList = document.getElementById('owedByList');
+    const owedByEntries = Object.entries(currentUserBalance.owed_by);
+
+    if (owedByEntries.length === 0) {
+        owedByList.innerHTML = '<div class="text-muted small">No one owes you money</div>';
+    } else {
+        owedByList.innerHTML = owedByEntries
+            .sort((a, b) => b[1] - a[1]) // Sort by amount descending
+            .map(([name, amount]) => `
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>${escapeHtml(name)}</span>
+                            <span class="badge bg-primary rounded-pill">${formatCurrency(amount)}</span>
+                        </div>
+                    `).join('');
+    }
+
+    // Display who the current user owes
+    const owesList = document.getElementById('owesList');
+    const owesEntries = Object.entries(currentUserBalance.owes);
+
+    if (owesEntries.length === 0) {
+        owesList.innerHTML = '<div class="text-muted small">You don\'t owe anyone</div>';
+    } else {
+        owesList.innerHTML = owesEntries
+            .sort((a, b) => b[1] - a[1]) // Sort by amount descending
+            .map(([name, amount]) => `
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>${escapeHtml(name)}</span>
+                            <span class="badge bg-secondary rounded-pill">${formatCurrency(amount)}</span>
+                        </div>
+                    `).join('');
+    }
 }
+
 
 // Display Pending Invites ---
 function displayPendingInvites() {
@@ -337,7 +357,7 @@ function updateLinks() {
     document.getElementById('addExpenseLink').href = `/groups/${groupId}/expenses/0`;
     document.getElementById('addRecurringExpenseLink').href = `/groups/${groupId}/add-recurring-expense`;
     document.getElementById('viewAllExpensesLink').href = `/groups/${groupId}/expenses`;
-    document.getElementById('viewAllExpensesLink2').href = `/groups/${groupId}/expenses`;
+    // document.getElementById('viewAllExpensesLink2').href = `/groups/${groupId}/expenses`;
     document.getElementById('viewHistoryLink').href = `/groups/${groupId}/view-audit`;
     document.getElementById('deleteGroupLink').href = `/groups/${groupId}/delete-group`;
     document.getElementById('viewPaymentsLink').href = `/groups/${groupId}/payments`;
@@ -345,6 +365,7 @@ function updateLinks() {
 
 // Initialize page
 async function initializePage() {
+    console.log('✅ initializePage called');
     showLoading();
 
     try {
@@ -353,7 +374,6 @@ async function initializePage() {
             fetchGroupDetails(),
             fetchGroupMembers(),
             fetchGroupBalances(),
-            fetchRecentExpenses(),
             fetchPendingInvites()
         ]);
 
@@ -361,10 +381,11 @@ async function initializePage() {
         displayGroupInfo();
         displayMembers();
         displayBalances();
-        displayRecentExpenses();
+        displayBalanceDetails();
         displayPendingInvites();
         setupUserPermissions();
         updateLinks();
+        setupPaymentModal();
 
         showContent();
     } catch (error) {
@@ -717,44 +738,131 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+// ===============================================
+// PAYMENT MODAL FUNCTIONALITY
+// ===============================================
 
-// Initialize when DOM is ready
-// document.addEventListener('DOMContentLoaded', () => {
-// initializePage();
-// //add this to listen for form submission
+// Populate member dropdowns for payment modal
+function populatePaymentMemberDropdowns() {
+    const addPayerSelect = document.getElementById('addPayerId');
+    const addPayeeSelect = document.getElementById('addPayeeId');
 
-// // 1. Add Member
-// const addMemberForm = document.getElementById('addMemberModalForm');
-// if (addMemberForm) {
-//     addMemberForm.addEventListener('submit', handleAddMember);
-// }
+    console.log(' Attempting to populate payment dropdowns');
+    console.log('membersData:', membersData);
+    console.log('Payer dropdown element:', addPayerSelect);
+    console.log('Payee dropdown element:', addPayeeSelect);
 
-// // 2. Remove Member
-// const removeMemberForm = document.getElementById('removeMemberModalForm');
-// if (removeMemberForm) {
-//     removeMemberForm.addEventListener('submit', handleRemoveMember);
-// }
+    if (!membersData || membersData.length === 0) {
+        console.warn('No members available for payment modal');
+        return;
+    }
 
-// // 3. Change Admin
-// const changeAdminForm = document.getElementById('changeAdminModalForm');
-// if (changeAdminForm) {
-//     changeAdminForm.addEventListener('submit', handleChangeAdmin);
-// }
-// });
+    const options = membersData.map(member =>
+        `<option value="${member.user.id}">${member.user.name}</option>`
+    ).join('');
 
+    if (addPayerSelect) {
+        addPayerSelect.innerHTML = '<option value="">Select payer...</option>' + options;
+    }
+    if (addPayeeSelect) {
+        addPayeeSelect.innerHTML = '<option value="">Select payee...</option>' + options;
+    }
+}
+
+// Setup payment modal - called AFTER members are loaded
+function setupPaymentModal() {
+    const addPaymentModal = document.getElementById('addPaymentModal');
+
+    if (addPaymentModal) {
+        addPaymentModal.addEventListener('show.bs.modal', () => {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('addPaymentDate').value = today;
+            populatePaymentMemberDropdowns();
+        });
+    }
+
+    // Handle add payment submission
+    const confirmAddPaymentBtn = document.getElementById('confirmAddPaymentBtn');
+    if (confirmAddPaymentBtn) {
+        confirmAddPaymentBtn.addEventListener('click', async () => {
+            const amount = parseFloat(document.getElementById('addAmount').value);
+            const paymentDate = document.getElementById('addPaymentDate').value;
+            const payerId = parseInt(document.getElementById('addPayerId').value);
+            const payeeId = parseInt(document.getElementById('addPayeeId').value);
+
+            if (!amount || amount <= 0) {
+                alert('Please enter a valid amount');
+                return;
+            }
+            if (!paymentDate) {
+                alert('Please select a payment date');
+                return;
+            }
+            if (!payerId || !payeeId) {
+                alert('Please select both payer and payee');
+                return;
+            }
+            if (payerId === payeeId) {
+                alert('Payer and payee cannot be the same person');
+                return;
+            }
+
+            const button = confirmAddPaymentBtn;
+            const originalText = button.innerHTML;
+            button.disabled = true;
+            button.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Recording...';
+
+            try {
+                const response = await fetch(
+                    `/api/groups/${window.GROUP_ID}/payments`,
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify({
+                            payer_id: payerId,
+                            payee_id: payeeId,
+                            amount,
+                            payment_date: paymentDate
+                        })
+                    }
+                );
+
+                if (response.ok) {
+                    const modal = bootstrap.Modal.getInstance(addPaymentModal);
+                    modal.hide();
+                    document.getElementById('addPaymentForm').reset();
+                    alert('Payment recorded successfully!');
+                    // Refresh balances
+                    await fetchGroupBalances();
+                    displayBalances();
+                    displayBalanceDetails();
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Failed to record payment');
+                }
+            } catch (error) {
+                console.error('Error recording payment:', error);
+                alert(`Error: ${error.message}`);
+            } finally {
+                button.disabled = false;
+                button.innerHTML = originalText;
+            }
+        });
+    }
+}
 
 // This code listens for ANY modal to open on the page
 document.addEventListener('show.bs.modal', (event) => {
-    // 'event.target' is the modal that is being opened
     const modal = event.target;
 
     // Find the form inside that specific modal
     const form = modal.querySelector('form');
-    if (!form) return; // No form in this modal
+    if (!form) return;
 
-    // Check the form's ID and attach the correct handler
+
     if (form.id === 'addMemberModalForm') {
-        // We add .once to avoid attaching the same listener 20 times
+        // add .once to avoid attaching the same listener 20 times
         form.addEventListener('submit', handleAddMember, { once: true });
     }
     else if (form.id === 'removeMemberModalForm') {

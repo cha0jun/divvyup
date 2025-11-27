@@ -191,6 +191,7 @@ class PaymentRead(PaymentBase):
     expense_group_id: int
     payer: UserRead
     payee: UserRead
+    created_by: int
     
     model_config = ConfigDict(from_attributes=True)
 
