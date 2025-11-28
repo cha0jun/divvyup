@@ -65,9 +65,9 @@ CREATE TABLE `member` (
 
     FOREIGN KEY(`user_id`) REFERENCES `user`(`id`) ON DELETE CASCADE,
     FOREIGN KEY(`expense_group_id`) REFERENCES `expense_group`(`id`) ON DELETE CASCADE,
-    FOREIGN KEY(`added_by`) REFERENCES `member`(`id`),
+    -- FIXED: Added ON DELETE SET NULL to prevent locking deletions
+    FOREIGN KEY(`added_by`) REFERENCES `member`(`id`) ON DELETE SET NULL, 
 
-    -- Ensure a user can only join a group once.
     UNIQUE(`user_id`, `expense_group_id`)
 ) ENGINE=InnoDB;
 
@@ -78,8 +78,8 @@ CREATE TABLE `member` (
 CREATE TABLE `expense` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `expense_group_id` INT NOT NULL,
-    `amount` DECIMAL(10, 2) NOT NULL CHECK(`amount` > 0), -- CONVERSION NOTE: Changed from REAL ato DECIMAL for financial accuracy. CHECK constraints are supported in MySQL 8.0.16+.
-    `payment_date` DATE NOT NULL, -- CONVERSION NOTE: Changed from TEXT to DATE
+    `amount` DECIMAL(10, 2) NOT NULL CHECK(`amount` > 0), 
+    `payment_date` DATE NOT NULL,
     `payer_id` INT NOT NULL,
     `name` VARCHAR(255) NOT NULL,
     `description` TEXT,
@@ -87,13 +87,14 @@ CREATE TABLE `expense` (
     `created_on` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `modified_by` INT NOT NULL,
     `modified_on` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    'receipt_path' TEXT,
+    `receipt_path` TEXT, -- FIXED: Removed single quotes
 
     FOREIGN KEY(`expense_group_id`) REFERENCES `expense_group`(`id`) ON DELETE CASCADE,
     FOREIGN KEY(`payer_id`) REFERENCES `user`(`id`) ON DELETE CASCADE,
     FOREIGN KEY(`created_by`) REFERENCES `user`(`id`),
     FOREIGN KEY(`modified_by`) REFERENCES `user`(`id`)
 ) ENGINE=InnoDB;
+
 
 -- -----------------------------------------------------------------------------
 -- Recurring Expense Table
