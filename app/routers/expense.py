@@ -166,7 +166,7 @@ async def update_expense_bl(group_id:int, expense_id:int, db: SessionDep, curren
     
     updated_expense = update_expense(db, expense_model, expense_id, current_user)
     if expense_model.recurring:
-        create_recurring_expense(db, expense_model.recurring, expense_id, current_user)
+        update_recurring_expense(db, expense_model.recurring, expense_id, current_user)
     create_audit(
         db,
         AuditRead(
