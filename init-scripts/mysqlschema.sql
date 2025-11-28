@@ -89,7 +89,7 @@ CREATE TABLE `expense` (
     `created_on` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `modified_by` INT NOT NULL,
     `modified_on` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    `receipt_path` TEXT, -- FIXED: Removed single quotes
+    `receipt_path` TEXT,
 
     FOREIGN KEY(`expense_group_id`) REFERENCES `expense_group`(`id`) ON DELETE CASCADE,
     FOREIGN KEY(`payer_id`) REFERENCES `user`(`id`) ON DELETE CASCADE,
@@ -106,6 +106,7 @@ CREATE TABLE `recurring_expense` (
     `expense_id` INT PRIMARY KEY, -- This is both PK and FK
     `frequency` VARCHAR(50) NOT NULL, -- e.g., 'daily', 'weekly', 'monthly'
     `start_date` DATE NOT NULL,
+    `next_run_date` DATE,
     `end_date` DATE,
     `created_by` INT NOT NULL,
     `created_on` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -242,3 +243,77 @@ CREATE INDEX `idx_payment_date` ON `payment`(`payment_date`);
 -- `ON UPDATE CURRENT_TIMESTAMP`, which handles this functionality automatically
 -- and more efficiently than a trigger.
 -- -----------------------------------------------------------------------------
+
+DELIMITER $$
+
+CREATE PROCEDURE `ProcessRecurringExpenses`()
+BEGIN
+    -- 1. Initialize next_run_date for new recurring setups
+    UPDATE `recurring_expense`
+    SET `next_run_date` = `start_date`
+    WHERE `next_run_date` IS NULL;
+
+    -- 2. Loop to handle "Catch-up" scenarios (e.g., if server was down)
+    WHILE EXISTS (
+        SELECT 1 FROM `recurring_expense` 
+        WHERE `next_run_date` <= CURDATE() 
+        AND (`end_date` IS NULL OR `next_run_date` <= `end_date`)
+    ) DO
+
+        -- A. Insert the new expense records based on the template
+        INSERT INTO `expense` (
+            `expense_group_id`,
+            `amount`,
+            `payment_date`,      -- Mapped to next_run_date
+            `payer_id`,
+            `name`,
+            `description`,
+            `created_by`,
+            `created_on`,
+            `modified_by`,
+            `modified_on`,
+            `receipt_path`       -- We set this to NULL for the new copy
+        )
+        SELECT 
+            e.`expense_group_id`, -- Copy Group
+            e.`amount`,           -- Copy Amount
+            r.`next_run_date`,    -- **New Date** based on schedule
+            e.`payer_id`,         -- Copy Payer
+            e.`name`,             -- Copy Name
+            e.`description`,      -- Copy Description
+            r.`created_by`,       -- Assigned to the user who set up the schedule
+            NOW(),                -- Created Now
+            r.`modified_by`,      -- Assigned to the user who last modified schedule
+            NOW(),                -- Modified Now
+            NULL                  -- Receipt is NULL (waiting for user upload)
+        FROM `recurring_expense` r
+        JOIN `expense` e ON r.`expense_id` = e.`id`
+        WHERE r.`next_run_date` <= CURDATE()
+          AND (r.`end_date` IS NULL OR r.`next_run_date` <= r.`end_date`);
+
+        -- B. Advance the schedule
+        UPDATE `recurring_expense`
+        SET `next_run_date` = CASE `frequency`
+            WHEN 'daily'   THEN DATE_ADD(`next_run_date`, INTERVAL 1 DAY)
+            WHEN 'weekly'  THEN DATE_ADD(`next_run_date`, INTERVAL 1 WEEK)
+            WHEN 'monthly' THEN DATE_ADD(`next_run_date`, INTERVAL 1 MONTH)
+            WHEN 'yearly'  THEN DATE_ADD(`next_run_date`, INTERVAL 1 YEAR)
+            ELSE DATE_ADD(`next_run_date`, INTERVAL 1 MONTH)
+        END,
+        `modified_on` = NOW()
+        WHERE `next_run_date` <= CURDATE()
+          AND (`end_date` IS NULL OR `next_run_date` <= `end_date`);
+
+    END WHILE;
+
+END$$
+
+DELIMITER ;
+
+SET GLOBAL event_scheduler = ON;
+
+CREATE EVENT `event_generate_recurring_expenses`
+ON SCHEDULE EVERY 1 DAY
+STARTS (TIMESTAMP(CURRENT_DATE) + INTERVAL 1 DAY + INTERVAL 1 HOUR) -- Starts tomorrow at 01:00 AM
+DO
+    CALL `ProcessRecurringExpenses`();

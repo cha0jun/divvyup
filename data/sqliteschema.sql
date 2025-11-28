@@ -103,7 +103,8 @@ CREATE TABLE `expense` (
 CREATE TABLE `recurring_expense` (
     `expense_id` INTEGER PRIMARY KEY, -- This is both PK and FK
     `frequency` TEXT NOT NULL, -- e.g., 'daily', 'weekly', 'monthly'
-    `start_date` TEXT NOT NULL, -- Stored as TEXT in 'YYYY-MM-DD' format
+    `start_date` TEXT NOT NULL,
+    `next_run_date` TEXT, -- Stored as TEXT in 'YYYY-MM-DD' format
     `end_date` TEXT, -- Stored as TEXT in 'YYYY-MM-DD' format
     `created_by` INTEGER NOT NULL,
     `created_on` TEXT NOT NULL DEFAULT (STRFTIME('%Y-%m-%d %H:%M:%S', 'NOW')),
