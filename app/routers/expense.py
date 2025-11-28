@@ -112,7 +112,6 @@ async def create_expense_bl(group_id:int, db: SessionDep, current_user: UserDep,
         # expense_model = ExpenseCreate.parse_raw(expense)
     except ValidationError as e:
         raise HTTPException(status_code=422, detail=e.errors())
-    print(expense_model.payer_id)
     validate_expense_group(db, group_id, "Expense group not found.")
     validate_group_member(db, current_user.id, group_id, "Only members can add group expenses")
     validate_group_member(db, expense_model.payer_id, group_id, "Payer must be a group member")
@@ -154,9 +153,10 @@ async def update_expense_bl(group_id:int, expense_id:int, db: SessionDep, curren
         # If you are using Pydantic V1, use this instead:
         # expense_model = ExpenseCreate.parse_raw(expense)
     except ValidationError as e:
-        raise HTTPException(status_code=422, detail=e.errors())
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=e.errors())
     validate_expense_group(db, group_id, "Expense group not found.")
-    validate_group_member(db, current_user.id, group_id, "Only members can update group expenses")
+    if expense_model.created_by != current_user.id:
+        validate_group_admin(db, current_user.id, group_id,"User is not owner of expense or an admin")
     
     if file:
         path = await create_receipt(file)
