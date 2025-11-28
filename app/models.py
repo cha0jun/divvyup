@@ -71,7 +71,7 @@ class ExpenseGroup(SQLModel, table=True):
         sa_column=Column(DateTime, nullable=False)
     )
 
-    expenses: List["Expense"] = Relationship(back_populates="group")
+    expenses: List["Expense"] = Relationship(back_populates="group",sa_relationship_kwargs={"cascade": "all, delete"})
    
     #cascade delete to delete all related Member rows(child) immediately when deleting an ExpenseGroup(parent)
     members: List["Member"] = Relationship(
@@ -150,7 +150,7 @@ class Expense(SQLModel, table=True):
     
     payer: User = Relationship(back_populates="paid_for", sa_relationship_kwargs={"foreign_keys": "[Expense.payer_id]"})
     group: ExpenseGroup = Relationship(back_populates="expenses")
-    recurring: RecurringExpense = Relationship(back_populates="expenses")
+    recurring: RecurringExpense = Relationship(back_populates="expenses",sa_relationship_kwargs={"cascade": "all, delete"})
     breakdowns: List["Breakdown"] = Relationship(
     back_populates="expense",
     sa_relationship_kwargs={
