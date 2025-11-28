@@ -178,6 +178,15 @@ CREATE TABLE `token_blocklist` (
     `expiry_dt` DATETIME NOT NULL      -- When the token expires (for cleanup)
 ) ENGINE=InnoDB;
 
+CREATE TABLE `platform_logs` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `description` TEXT NOT NULL,
+    `created_by` INT,
+    `created_on` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY(`created_by`) REFERENCES `user`(`id`) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
 -- -----------------------------------------------------------------------------
 -- Indexes
 -- Create indexes on foreign keys to improve query performance.

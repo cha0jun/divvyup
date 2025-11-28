@@ -177,6 +177,15 @@ CREATE TABLE `token_blocklist` (
     `expiry_dt` TEXT NOT NULL      -- When the token expires (for cleanup), stored as TEXT
 );
 
+CREATE TABLE `platform_logs` (
+    `id` INTEGER PRIMARY KEY AUTOINCREMENT,
+    `description` TEXT NOT NULL,
+    `created_by` INTEGER,
+    `created_on` TEXT NOT NULL DEFAULT (STRFTIME('%Y-%m-%d %H:%M:%S', 'NOW')),
+
+    FOREIGN KEY(`created_by`) REFERENCES `user`(`id`) ON DELETE SET NULL
+);
+
 -- -----------------------------------------------------------------------------
 -- Indexes
 -- Create indexes on foreign keys to improve query performance.

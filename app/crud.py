@@ -177,6 +177,19 @@ def transfer_admin_rights(db: Session, group_id: int, new_admin_user_id: int, mo
     db.refresh(db_group)
     return db_group
 
+#--------------Platform Logs---------------
+
+def create_log(db: Session, description:str, current_user:User | None):
+    log = PlatformLogs(
+        description=description,
+        created_by=current_user.id,
+        created_on=datetime.now(),
+    )
+    
+    db.add(log)
+    db.commit()
+    return
+
 #-----------Audit-------------------
 def get_all_audit(db: Session, group_id: int) -> List[Audit]:
     return db.exec(
@@ -457,9 +470,6 @@ def delete_payment(db: Session, payment_id: int) -> None:
     db.delete(db_payment)
     db.commit()
     return
-
-
-
 
 
 #--------------Balance Calculation---------------

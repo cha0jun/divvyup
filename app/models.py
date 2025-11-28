@@ -290,4 +290,14 @@ class TokenBlockList(SQLModel, table = True):
         sa_column = Column(DateTime(timezone = True), nullable = False)
     )
 
+class PlatformLogs(SQLModel, table = True):
+    __tablename__ = "platform_logs"
+    
+    id: Optional[int] = Field(default=None, primary_key=True)
+    description: str 
+    created_by: int = Field(foreign_key="user.id")
+    created_on: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        sa_column=Column(DateTime, nullable=False)
+    )
     

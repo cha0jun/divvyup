@@ -36,6 +36,8 @@ def login(
         path="/"
     )
     
+    create_log(db, f'{user.name} logged in.', user)
+    
     return UserRead(id=user.id, name=user.name, email=user.email)
 
 @router.post("/register", response_model = UserRead)
@@ -47,6 +49,7 @@ def register_new_user(db: SessionDep, user: UserCreate):
             status_code = 400, 
             detail = "Email is registered, use another email.")
     new_user = create_user(db, user)
+    create_log(db, f'Account created for {new_user.name}', new_user.id)
     return new_user
 
 @router.post("/logout", status_code = status.HTTP_204_NO_CONTENT)
@@ -81,4 +84,6 @@ def logout(
         httponly=True, 
         samesite="lax"
         )
+    
+    create_log(db, f"Token added to blocklist - {access_token}",None)
     return None
