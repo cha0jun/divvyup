@@ -9,12 +9,12 @@
       <form id="{{ modal_id }}Form">
         <div class="modal-body">
           <div class="mb-3">
-            <label for="groupName" class="form-label">Group Name *</label>
+            <label for="groupName" class="form-label">Group Name </label>
             <input type="text" class="form-control" id="groupName" name="name" 
-                   value="{{ group.name if group else '' }}" required />
+                   value="{{ group.name if group else '' }}" />
           </div>
           <div class="mb-3">
-            <label for="groupDescription" class="form-label">Description (optional)</label>
+            <label for="groupDescription" class="form-label">Description </label>
             <textarea class="form-control" id="groupDescription" name="description" rows="3">{{ group.description if group else '' }}</textarea>
           </div>
         </div>

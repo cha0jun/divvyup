@@ -85,9 +85,9 @@
           <div id="collapse-2" class="accordion-collapse collapse" aria-labelledby="heading-2"
             data-bs-parent="#details">
             <div class="accordion-body">
-              <a href="#" id="recurringExpensesLink" class="btn btn-outline-primary w-100 mb-2">
+              <!--<a href="#" id="recurringExpensesLink" class="btn btn-outline-primary w-100 mb-2">
                 View Recurring Expenses
-              </a>
+              </a>-->
               <a href="#" id="viewPaymentsLink" class="btn btn-outline-secondary w-100 mb-2">
                 View Payments
               </a>
@@ -187,7 +187,7 @@
         <div class="card-body">
           <div class="d-flex flex-wrap gap-2">
             <a href=# id="addExpenseLink" class="btn btn-primary">Add Expense</a>
-            <a href="#" id="addRecurringExpenseLink" class="btn btn-secondary">Add Recurring Expense</a>
+            <!--<a href="#" id="addRecurringExpenseLink" class="btn btn-secondary">Add Recurring Expense</a>-->
             <a href="#" id="settleUpBtn" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addPaymentModal">Settle Up</a>
             <a href="#" id="viewAllExpensesLink" class="btn btn-outline-primary">View All Expenses</a>
           </div>
@@ -319,6 +319,10 @@
 {% set input_label = "User's Email to Invite" %}
 {% set submit_text = 'Send Invitation' %}
 {% include 'partials/_member_modal.html' %}
+
+{% set history_modal_id = 'viewHistoryModal' %}
+{% set history_modal_title = 'Audit History' %}
+{% include 'partials/_view_history.html' %}
 
 <script>
   // Ensure variables exist

@@ -353,9 +353,9 @@ function updateLinks() {
     const groupId = window.GROUP_ID;
 
     // Update all links with group_id
-    document.getElementById('recurringExpensesLink').href = `/groups/${groupId}/recurring-expenses`;
+
     document.getElementById('addExpenseLink').href = `/groups/${groupId}/expenses/0`;
-    document.getElementById('addRecurringExpenseLink').href = `/groups/${groupId}/add-recurring-expense`;
+
     document.getElementById('viewAllExpensesLink').href = `/groups/${groupId}/expenses`;
     // document.getElementById('viewAllExpensesLink2').href = `/groups/${groupId}/expenses`;
     document.getElementById('viewHistoryLink').href = `/groups/${groupId}/view-audit`;
@@ -625,18 +625,34 @@ async function handleEditGroup(event) {
     submitButton.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Saving...';
 
     // Get the values from the form inputs
-    const name = form.querySelector('#groupName').value;
-    const description = form.querySelector('#groupDescription').value;
+    const name = form.querySelector('#groupName').value.trim();
+    const description = form.querySelector('#groupDescription').value.trim();
+
+    // Build the payload - only include fields that have values
+    const payload = {};
+    if (name) {
+        payload.name = name;
+    }
+    if (description) {
+        payload.description = description;
+    }
+
+    // Check if at least one field is being updated
+    if (Object.keys(payload).length === 0) {
+        alert('Please provide at least one field to update');
+        submitButton.disabled = false;
+        submitButton.innerHTML = originalButtonText;
+        return;
+    }
+
 
     try {
         const response = await fetch(`/api/groups/${window.GROUP_ID}`, {
-            method: 'PATCH', // PATCH as defined in the API
+            method: 'PATCH',
             credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                name: name,
-                description: description
-            })
+            body: JSON.stringify(payload)
+
         });
 
         const result = await response.json();
@@ -645,9 +661,8 @@ async function handleEditGroup(event) {
             throw new Error(result.detail || 'Failed to update group');
         }
 
-        // --- SUCCESS! ---
         alert('Group updated successfully!');
-        window.location.reload(); // Reload to show new group name
+        window.location.reload();
 
     } catch (error) {
         console.error('Error updating group:', error);
@@ -717,12 +732,14 @@ async function handleViewHistory(event) {
             return;
         }
 
-        // Build a simple string for display
-        const historyText = audits
-            .map(a => `• ${a.change_description}`)
-            .join('\n');
+        // Build html list for display
+        const historyHTML = audits
+            .map(a => `<li class="mb-2">${escapeHtml(a.change_description)}</li>`)
+            .join('');
 
-        alert(`Audit History:\n\n${historyText}`);
+        document.getElementById('historyContent').innerHTML = `<ul class="list-unstyled">${historyHTML}</ul>`;
+        const modal = new bootstrap.Modal(document.getElementById('viewHistoryModal'));
+        modal.show();
 
     } catch (error) {
         console.error('Error fetching audit history:', error);
