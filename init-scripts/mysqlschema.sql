@@ -17,6 +17,7 @@ DROP TABLE IF EXISTS `expense`;
 DROP TABLE IF EXISTS `member`;
 DROP TABLE IF EXISTS `expense_group`;
 DROP TABLE IF EXISTS `user`;
+DROP TABLE IF EXISTS `payment`;
 
 SET FOREIGN_KEY_CHECKS=1;
 
@@ -178,6 +179,30 @@ CREATE TABLE `token_blocklist` (
     `expiry_dt` DATETIME NOT NULL      -- When the token expires (for cleanup)
 ) ENGINE=InnoDB;
 
+
+-- -----------------------------------------------------------------------------
+-- Payment Table
+-- Records payments made between members within a group to settle balances.
+-- -----------------------------------------------------------------------------
+CREATE TABLE `payment` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `expense_group_id` INT NOT NULL,
+    `payer_id` INT NOT NULL,
+    `payee_id` INT NOT NULL,
+    `amount` DECIMAL(10, 2) NOT NULL CHECK (`amount` > 0),
+    `payment_date` DATE NOT NULL,
+    `created_by` INT NOT NULL,
+    `created_on` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `modified_by` INT NOT NULL,
+    `modified_on` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY(`expense_group_id`) REFERENCES `expense_group`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY(`payer_id`) REFERENCES `user`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY(`payee_id`) REFERENCES `user`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY(`created_by`) REFERENCES `user`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY(`modified_by`) REFERENCES `user`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
 CREATE TABLE `platform_logs` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `description` TEXT NOT NULL,
@@ -203,6 +228,10 @@ CREATE INDEX `idx_invitation_group` ON `invitation`(`expense_group_id`);
 CREATE INDEX `idx_invitation_inviter` ON `invitation`(`inviter_id`);
 CREATE INDEX `idx_invitation_invitee` ON `invitation`(`invitee_id`);
 CREATE INDEX `idx_blocklist_expires` ON `token_blocklist`(`expiry_dt`);
+CREATE INDEX `idx_payment_group` ON `payment`(`expense_group_id`);
+CREATE INDEX `idx_payment_payer` ON `payment`(`payer_id`);
+CREATE INDEX `idx_payment_payee` ON `payment`(`payee_id`);
+CREATE INDEX `idx_payment_date` ON `payment`(`payment_date`);
 
 
 -- -----------------------------------------------------------------------------
