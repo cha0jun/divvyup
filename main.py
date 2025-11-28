@@ -3,13 +3,12 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from typing import Annotated
-from .database import engine
 from sqlmodel import SQLModel
-from .routers import expense, group, invitation, user, payment
-from .models import User
-from .auth import get_current_user_optional
-from .crud import *
-from .database import *
+from app.routers import expense, group, invitation, user, payment
+from app.models import User
+from app.auth import get_current_user_optional
+from app.crud import *
+from app.database import *
 
 
 #Add startup event handler 
