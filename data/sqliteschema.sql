@@ -17,6 +17,7 @@ DROP TABLE IF EXISTS `expense`;
 DROP TABLE IF EXISTS `member`;
 DROP TABLE IF EXISTS `expense_group`;
 DROP TABLE IF EXISTS `user`;
+DROP TABLE IF EXISTS `platform_logs`;
 
 PRAGMA foreign_keys = ON;
 
@@ -180,10 +181,10 @@ CREATE TABLE `token_blocklist` (
 CREATE TABLE `platform_logs` (
     `id` INTEGER PRIMARY KEY AUTOINCREMENT,
     `description` TEXT NOT NULL,
-    `created_by` INTEGER,
+    `performed_by` INTEGER,
     `created_on` TEXT NOT NULL DEFAULT (STRFTIME('%Y-%m-%d %H:%M:%S', 'NOW')),
 
-    FOREIGN KEY(`created_by`) REFERENCES `user`(`id`) ON DELETE SET NULL
+    FOREIGN KEY(`performed_by`) REFERENCES `user`(`id`) ON DELETE SET NULL
 );
 
 -- -----------------------------------------------------------------------------

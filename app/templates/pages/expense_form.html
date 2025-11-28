@@ -439,6 +439,7 @@ document.getElementById('submitExpenseBtn').addEventListener('click', async func
         // Ensure date is sent (defaults to today if empty)
         payment_date: paymentDate ? new Date(paymentDate).toISOString() : new Date().toISOString(),
         breakdowns: breakdowns,
+        created_by: userId,
         recurring: recurringData 
     };
 

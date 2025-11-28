@@ -41,13 +41,13 @@
     </div>
   </div>
 </div>
+<script src="/static/js/common.js"></script>
 <script>
 // This variable will hold our fetched data so other functions can access it.
 let allExpensesData = [];
 
-// Get the group_id from the Jinja2 template
 const groupId = "{{ group_id }}";
-//const modalId = "detModal"; // The ID we gave our macro instance
+const userId = "{{user.id}}";
 
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('addExpenseLink').href = `/groups/${groupId}/expenses/0`;
@@ -113,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // --- UPDATED FUNCTION TO POPULATE THE RENDERED MACRO ---
-  function populateModalFromMacro(expenseObject) {
+async function populateModalFromMacro(expenseObject) {
     const bdlist = document.getElementById('modal-bdlist');
     bdlist.innerHTML = ''
 
@@ -173,14 +173,19 @@ if (expenseObject.recurring) {
     recSection.classList.add('d-none');
 }
 
-    // You can also dynamically update links, like an "Edit" button
-    const editButton = document.getElementById(`modal-edit`);
-    if (editButton) {
+const isAdmin = await setupAdminPermissions(parseInt(groupId), parseInt(userId));
+const editButton = document.getElementById(`modal-edit`);
+if (isAdmin || userId == expenseObject.created_by) {
+  if (editButton) {
       // Example: Set the href to an edit page for this specific expense
       editButton.onclick = function() {
         window.location.href = `/groups/${groupId}/expenses/${expenseObject.id}`;
     };
-    }
+  }
+} else {
+  editButton.classList.add('d-none');
+}
+
 }
 
   function displayError(error) {

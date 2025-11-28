@@ -182,9 +182,11 @@ def transfer_admin_rights(db: Session, group_id: int, new_admin_user_id: int, mo
 def create_log(db: Session, description:str, current_user:User | None):
     log = PlatformLogs(
         description=description,
-        created_by=current_user.id,
         created_on=datetime.now(),
     )
+    
+    if current_user:
+        log.performed_by = current_user.id
     
     db.add(log)
     db.commit()

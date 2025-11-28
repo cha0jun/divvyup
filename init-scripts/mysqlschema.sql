@@ -18,6 +18,7 @@ DROP TABLE IF EXISTS `member`;
 DROP TABLE IF EXISTS `expense_group`;
 DROP TABLE IF EXISTS `user`;
 DROP TABLE IF EXISTS `payment`;
+DROP TABLE IF EXISTS `platform_logs`;
 
 SET FOREIGN_KEY_CHECKS=1;
 
@@ -206,10 +207,10 @@ CREATE TABLE `payment` (
 CREATE TABLE `platform_logs` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `description` TEXT NOT NULL,
-    `created_by` INT,
+    `performed_by` INT,
     `created_on` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    FOREIGN KEY(`created_by`) REFERENCES `user`(`id`) ON DELETE SET NULL
+    FOREIGN KEY(`performed_by`) REFERENCES `user`(`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
 -- -----------------------------------------------------------------------------

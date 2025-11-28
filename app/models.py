@@ -295,7 +295,7 @@ class PlatformLogs(SQLModel, table = True):
     
     id: Optional[int] = Field(default=None, primary_key=True)
     description: str 
-    created_by: int = Field(foreign_key="user.id")
+    performed_by: int | None = Field(default=None, foreign_key="user.id", nullable=True)
     created_on: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),
         sa_column=Column(DateTime, nullable=False)

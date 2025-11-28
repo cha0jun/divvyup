@@ -49,7 +49,7 @@ def register_new_user(db: SessionDep, user: UserCreate):
             status_code = 400, 
             detail = "Email is registered, use another email.")
     new_user = create_user(db, user)
-    create_log(db, f'Account created for {new_user.name}', new_user.id)
+    create_log(db, f'Account created for {new_user.name}', new_user)
     return new_user
 
 @router.post("/logout", status_code = status.HTTP_204_NO_CONTENT)

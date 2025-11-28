@@ -110,6 +110,7 @@ class ExpenseBase(BaseModel):
     amount: float
     payment_date: datetime
     receipt_path: Optional[str] = None
+    created_by:int
     
 # might be possible to use ExpenseBase across
     
