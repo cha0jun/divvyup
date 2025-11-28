@@ -710,6 +710,45 @@ async function handleDeleteGroup(event) {
     }
 }
 
+// //--- Handle View History ---
+// async function handleViewHistory(event) {
+//     event.preventDefault();
+
+//     try {
+//         const response = await fetch(`/api/groups/${window.GROUP_ID}/audits`, {
+//             method: 'GET',
+//             credentials: 'include'
+//         });
+
+//         if (!response.ok) {
+//             const result = await response.json();
+//             throw new Error(result.detail || 'Failed to fetch audit history');
+//         }
+
+//         const audits = await response.json();
+
+//         if (audits.length === 0) {
+//             alert('No audit history found for this group.');
+//             return;
+//         }
+
+//         // Build html list for display
+//         // const historyHTML = audits
+//         //     .map(a => `<li class="mb-2">${escapeHtml(a.change_description)}</li>`)
+//         //     .join('');
+//         document.getElementById('historyContent').innerHTML = `<ul class="list-unstyled">${historyHTML}</ul>`;
+//         const modal = new bootstrap.Modal(document.getElementById('viewHistoryModal'));
+//         modal.show();
+
+
+
+//     } catch (error) {
+//         console.error('Error fetching audit history:', error);
+//         alert(`Error: ${error.message}`);
+//     }
+// }
+
+
 //--- Handle View History ---
 async function handleViewHistory(event) {
     event.preventDefault();
@@ -732,12 +771,31 @@ async function handleViewHistory(event) {
             return;
         }
 
-        // Build html list for display
-        const historyHTML = audits
-            .map(a => `<li class="mb-2">${escapeHtml(a.change_description)}</li>`)
-            .join('');
+        // Build html table for display
+        const historyHTML = audits.map((a, idx) => `
+            <tr>
+                <td>${idx + 1}</td> <!-- running number -->
+                <td>${escapeHtml(a.change_description)}</td>
+                <td>${new Date(a.created_on).toLocaleString()}</td>
+            </tr>
+        `).join('');
 
-        document.getElementById('historyContent').innerHTML = `<ul class="list-unstyled">${historyHTML}</ul>`;
+        // Insert table into modal content
+        document.getElementById('historyContent').innerHTML = `
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Description</th>
+                        <th>Created On</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${historyHTML}
+                </tbody>
+            </table>
+        `;
+
         const modal = new bootstrap.Modal(document.getElementById('viewHistoryModal'));
         modal.show();
 
@@ -746,6 +804,9 @@ async function handleViewHistory(event) {
         alert(`Error: ${error.message}`);
     }
 }
+
+
+
 
 
 

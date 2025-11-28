@@ -73,6 +73,7 @@ class TransferOwnership(BaseModel):
 
 class AuditRead(BaseModel):
     change_description: str
+    created_on: datetime
 
     model_config = ConfigDict(from_attributes=True)
 

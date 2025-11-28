@@ -252,11 +252,18 @@ def get_audits_bl(group_id:int, db: SessionDep, current_user: UserDep):
     
     aud_list = get_all_audit(db, group_id)
     
+    # out = [
+    #     AuditRead(
+    #         change_description = a.change_description,
+    #     ) for a in aud_list
+    # ]
     out = [
-        AuditRead(
-            change_description = a.change_description,
-        ) for a in aud_list
-    ]
+    AuditRead(
+        change_description=a.change_description,
+        created_on=a.created_on
+    ) for a in aud_list
+]
+
     
     return out
     
