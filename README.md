@@ -468,109 +468,6 @@ classDiagram
 - Shared validation schemas (Base → Create → Update → Read pattern)
 - Common UI components (navbar, pagination, modals)
 
-
-
-## Testing Strategy
-
-This project maintains high code quality and reliability through a robust **Integration Testing** suite.
-
-### Core Technologies
-
-- **Framework:** `pytest`
-- **Client:** `httpx` (via FastAPI `TestClient`)
-- **Database:** `SQLite` (In-Memory)
-
-### Architecture & Implementation Details
-
-1.  **In-Memory Database Isolation:**
-
-    - Tests run against a `sqlite:///:memory:` database. This ensures tests are extremely fast and never affect the production (MySQL) database.
-
-2.  **Dependency Injection Overrides:**
-
-    - We utilize FastAPI's `app.dependency_overrides` feature.
-    - **Database:** The production `get_db` dependency is swapped out for a fixture that yields a session connected to the in-memory SQLite DB.
-    - **Authentication:** The `get_current_user` dependency is overridden to bypass JWT verification, allowing us to simulate specific user contexts.
-
-3.  **Data Persistence & Cleanup:**
-    - **Fixtures:** We use `pytest` fixtures to seed data (Users, Groups, Expenses) before tests run.
-    - **Teardown:** The database schema is created fresh for every test session and dropped immediately after, ensuring no data pollution between tests.
-
-### Docker Integration
-
-1.  **Dedicated Test Container:** A specific service (`tests`) runs alongside the application.
-2.  **Startup dependency:** The main application container (`app`) has a strict dependency on the test container:
-    ```yaml
-    depends_on:
-      tests:
-        condition: service_completed_successfully
-    ```
-3.  **Safety Gate:** When running `docker compose up`, the system first builds the image and runs the test suite. If any test fails, the main application container will refuse to start.
-
-### How to Run Tests
-
-#### Option 1: Run via Docker (Recommended)
-
-This method ensures the environment matches production exactly.
-
-```bash
-docker compose up --build
-```
-
-_If the tests pass, the app will start on port 443. If they fail, the app container will not start, and errors will be displayed in the logs._
-
-#### Option 2: Run Locally
-
-If you are developing locally, you can run tests directly:
-
-1.  Install dependencies:
-    ```bash
-    pip install pytest httpx
-    ```
-2.  Run the suite:
-
-    ```bash
-    # Run all tests
-    python -m pytest
-
-    # Run with verbose output
-    python -m pytest -v
-    ```
-
-#####
-
-
-## Security Considerations
-
-**Implemented Security Measures:**
-- HTTPS/SSL encryption for all traffic (TLS certificates)
-- Password hashing using bcrypt
-- JWT-based authentication via python-jose
-- Environment variable management for sensitive data (SECRET_KEY)
-- SQL injection prevention via SQLModel/SQLAlchemy ORM
-- Docker container isolation
-- **Platform audit logging** (`PlatformLogs`) for authentication attempts and critical actions
-
-**Security Risks Mitigated:**
-- Man-in-the-middle attacks (SSL/TLS)
-- Password breaches (bcrypt hashing with salts)
-- SQL injection (parameterized queries via ORM)
-- Credential exposure (environment variables, not hardcoded)
-- **Unauthorized access attempts** (logged via PlatformLogs for monitoring and alerting)
-- **Security incident investigation** (audit trail enables forensic analysis)
-
-**Note on Database Credentials:**
-- The database password in `docker-compose.yml` is hardcoded as per project requirements
-- Store sensitive credentials in `.env` files (excluded from version control via `.gitignore`)
-- Use Docker secrets or environment variables for all passwords
-
-**Deployment Considerations:**
-- Use proper CA-signed certificates in production (not self-signed)
-- Rotate SECRET_KEY regularly
-- Use strong database passwords
-- Keep dependencies updated for security patches
-- Consider adding rate limiting for API endpoints
-
 ## Code Quality & Maintainability
 
 ### Code Organization Principles
@@ -785,6 +682,109 @@ class Payment(SQLModel, table=True):
 - Ready for compliance requirements
 - Supports forensic analysis and security incident response
 
+
+## Testing Strategy
+
+This project maintains high code quality and reliability through a robust **Integration Testing** suite.
+
+### Core Technologies
+
+- **Framework:** `pytest`
+- **Client:** `httpx` (via FastAPI `TestClient`)
+- **Database:** `SQLite` (In-Memory)
+
+### Architecture & Implementation Details
+
+1.  **In-Memory Database Isolation:**
+
+    - Tests run against a `sqlite:///:memory:` database. This ensures tests are extremely fast and never affect the production (MySQL) database.
+
+2.  **Dependency Injection Overrides:**
+
+    - We utilize FastAPI's `app.dependency_overrides` feature.
+    - **Database:** The production `get_db` dependency is swapped out for a fixture that yields a session connected to the in-memory SQLite DB.
+    - **Authentication:** The `get_current_user` dependency is overridden to bypass JWT verification, allowing us to simulate specific user contexts.
+
+3.  **Data Persistence & Cleanup:**
+    - **Fixtures:** We use `pytest` fixtures to seed data (Users, Groups, Expenses) before tests run.
+    - **Teardown:** The database schema is created fresh for every test session and dropped immediately after, ensuring no data pollution between tests.
+
+### Docker Integration
+
+1.  **Dedicated Test Container:** A specific service (`tests`) runs alongside the application.
+2.  **Startup dependency:** The main application container (`app`) has a strict dependency on the test container:
+    ```yaml
+    depends_on:
+      tests:
+        condition: service_completed_successfully
+    ```
+3.  **Safety Gate:** When running `docker compose up`, the system first builds the image and runs the test suite. If any test fails, the main application container will refuse to start.
+
+### How to Run Tests
+
+#### Option 1: Run via Docker (Recommended)
+
+This method ensures the environment matches production exactly.
+
+```bash
+docker compose up --build
+```
+
+_If the tests pass, the app will start on port 443. If they fail, the app container will not start, and errors will be displayed in the logs._
+
+#### Option 2: Run Locally
+
+If you are developing locally, you can run tests directly:
+
+1.  Install dependencies:
+    ```bash
+    pip install pytest httpx
+    ```
+2.  Run the suite:
+
+    ```bash
+    # Run all tests
+    python -m pytest
+
+    # Run with verbose output
+    python -m pytest -v
+    ```
+
+#####
+
+
+## Security Considerations
+
+**Implemented Security Measures:**
+- HTTPS/SSL encryption for all traffic (TLS certificates)
+- Password hashing using bcrypt
+- JWT-based authentication via python-jose
+- Environment variable management for sensitive data (SECRET_KEY)
+- SQL injection prevention via SQLModel/SQLAlchemy ORM
+- Docker container isolation
+- **Platform audit logging** (`PlatformLogs`) for authentication attempts and critical actions
+
+**Security Risks Mitigated:**
+- Man-in-the-middle attacks (SSL/TLS)
+- Password breaches (bcrypt hashing with salts)
+- SQL injection (parameterized queries via ORM)
+- Credential exposure (environment variables, not hardcoded)
+- **Unauthorized access attempts** (logged via PlatformLogs for monitoring and alerting)
+- **Security incident investigation** (audit trail enables forensic analysis)
+
+**Note on Database Credentials:**
+- The database password in `docker-compose.yml` is hardcoded as per project requirements
+- Store sensitive credentials in `.env` files (excluded from version control via `.gitignore`)
+- Use Docker secrets or environment variables for all passwords
+
+**Deployment Considerations:**
+- Use proper CA-signed certificates in production (not self-signed)
+- Rotate SECRET_KEY regularly
+- Use strong database passwords
+- Keep dependencies updated for security patches
+- Consider adding rate limiting for API endpoints
+
+
 ### Cross-Platform Considerations
 
 **Frontend Compatibility:**
@@ -797,20 +797,6 @@ class Payment(SQLModel, table=True):
 - Database abstraction allows switching RDBMS systems
 - Environment variables for configuration flexibility
 - Platform-agnostic Python code
-
-### Logging Strategy
-
-**Current Implementation:**
-- SQLAlchemy `echo=False` in production (configurable for debugging)
-- FastAPI automatic logging of requests/responses
-- JWT token validation logs authentication failures
-
-**Future Enhancements:**
-- Structured logging with log levels (INFO, WARNING, ERROR)
-- Request ID tracking across layers
-- Performance monitoring and slow query logging
-- Frontend error tracking (e.g., Sentry integration)
-
 
 ## External Documentation
 
