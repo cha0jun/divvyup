@@ -4,7 +4,7 @@ services:
     build: .
     container_name: app-tests
     # Overwrite the command to run pytest instead of starting the server
-    command: python -m pytest
+    command: python -m pytest -s
     # Mount the code so changes are reflected immediately
     volumes:
       - .:/app
