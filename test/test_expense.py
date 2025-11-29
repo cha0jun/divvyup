@@ -1,44 +1,51 @@
 import pytest
-from fastapi.testclient import TestClient
 from sqlmodel import Session, SQLModel, create_engine
+from sqlmodel.pool import StaticPool # <--- IMPORTANT IMPORT
+from fastapi.testclient import TestClient
 
-# --- Imports from your actual project ---
-# Adjust these paths to match your project structure
-from main import app  
-from app.models import User, ExpenseGroup, Member # Import your SQLModels
-from app.auth import get_current_user # Import your Auth dependency function
+from app.models import User, ExpenseGroup, Member, Expense, Payment, Invitation, Breakdown
+from main import app
 from app.database import SessionDep
+from app.auth import get_current_user
 
-# --- 1. Database & Test Client Setup ---
-
-# Create an in-memory SQLite database
-# connect_args={"check_same_thread": False} is needed for SQLite with FastAPI
+# 2. Use StaticPool for SQLite Memory
+# This ensures that multiple threads (FastAPI) and the Test Runner share 
+# the SAME in-memory database instance.
 TEST_DATABASE_URL = "sqlite:///:memory:"
-engine = create_engine(TEST_DATABASE_URL, connect_args={"check_same_thread": False})
+
+engine = create_engine(
+    TEST_DATABASE_URL, 
+    connect_args={"check_same_thread": False}, 
+    poolclass=StaticPool # <--- THIS IS CRITICAL FOR IN-MEMORY TESTS
+)
 
 @pytest.fixture(name="session")
 def session_fixture():
     """
-    Creates a new database session for a test, creates tables, 
-    and drops them after the test finishes.
+    Creates a new database session for a test. 
     """
+    # Create the tables in the specific in-memory engine
     SQLModel.metadata.create_all(engine)
+    
     with Session(engine) as session:
         yield session
+    
+    # Clean up after test
     SQLModel.metadata.drop_all(engine)
 
 @pytest.fixture(name="client")
 def client_fixture(session: Session):
     """
-    Creates a TestClient that overrides the database dependency
-    to use the in-memory test session.
+    Returns a TestClient with the database dependency overridden.
     """
     def get_session_override():
         return session
 
     app.dependency_overrides[SessionDep] = get_session_override
-    client = TestClient(app)
-    yield client
+    
+    with TestClient(app) as client:
+        yield client
+    
     app.dependency_overrides.clear()
 
 # --- 2. Data Seeding Fixtures ---
