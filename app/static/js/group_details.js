@@ -121,28 +121,6 @@ async function fetchGroupBalances() {
     }
 }
 
-// Fetch recent expenses 
-// async function fetchRecentExpenses() {
-//     try {
-//         const response = await fetch(`/api/groups/${window.GROUP_ID}/expenses?limit=3`, {
-//             credentials: 'include',
-//             headers: {
-//                 'Content-Type': 'application/json'
-//             }
-//         });
-
-//         if (!response.ok) {
-//             throw new Error(`HTTP error! status: ${response.status}`);
-//         }
-
-//         expensesData = await response.json();
-//         return expensesData;
-//     } catch (error) {
-//         console.error('Error fetching expenses:', error);
-//         // Non-critical, just return empty array
-//         return [];
-//     }
-// }
 
 // Fetch Pending Invites ---
 async function fetchPendingInvites() {
@@ -329,7 +307,6 @@ function displayPendingInvites() {
         </li>
     `).join('');
 
-    // Add click listener for the cancel buttons
     invitesList.querySelectorAll('.cancel-invite-btn').forEach(button => {
         button.addEventListener('click', handleCancelInvitation);
     });
@@ -357,7 +334,6 @@ function updateLinks() {
     document.getElementById('addExpenseLink').href = `/groups/${groupId}/expenses/0`;
 
     document.getElementById('viewAllExpensesLink').href = `/groups/${groupId}/expenses`;
-    // document.getElementById('viewAllExpensesLink2').href = `/groups/${groupId}/expenses`;
     document.getElementById('viewHistoryLink').href = `/groups/${groupId}/view-audit`;
     document.getElementById('deleteGroupLink').href = `/groups/${groupId}/delete-group`;
     document.getElementById('viewPaymentsLink').href = `/groups/${groupId}/payments`;
@@ -406,8 +382,6 @@ async function handleAddMember(event) {
     // Show a loading state on the button
     submitButton.disabled = true;
     submitButton.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Adding...';
-
-    // Get the email from the input
     const email = document.getElementById('addMemberEmailInput').value;
 
     try {
@@ -415,7 +389,7 @@ async function handleAddMember(event) {
             method: 'POST',
             credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: email }) // Send the data as JSON
+            body: JSON.stringify({ email: email })
         });
 
         const result = await response.json();
@@ -432,7 +406,6 @@ async function handleAddMember(event) {
         console.error('Error adding member:', error);
         alert(`Error: ${error.message}`);
     } finally {
-        // Restore the button text
         submitButton.disabled = false;
         submitButton.innerHTML = originalButtonText;
     }
@@ -683,7 +656,6 @@ async function handleDeleteGroup(event) {
     const deleteButton = event.target;
     const originalText = deleteButton.innerText;
 
-    // Disable button and show spinner text
     deleteButton.classList.add('disabled');
     deleteButton.innerText = 'Deleting...';
 
@@ -709,44 +681,6 @@ async function handleDeleteGroup(event) {
         deleteButton.innerText = originalText;
     }
 }
-
-// //--- Handle View History ---
-// async function handleViewHistory(event) {
-//     event.preventDefault();
-
-//     try {
-//         const response = await fetch(`/api/groups/${window.GROUP_ID}/audits`, {
-//             method: 'GET',
-//             credentials: 'include'
-//         });
-
-//         if (!response.ok) {
-//             const result = await response.json();
-//             throw new Error(result.detail || 'Failed to fetch audit history');
-//         }
-
-//         const audits = await response.json();
-
-//         if (audits.length === 0) {
-//             alert('No audit history found for this group.');
-//             return;
-//         }
-
-//         // Build html list for display
-//         // const historyHTML = audits
-//         //     .map(a => `<li class="mb-2">${escapeHtml(a.change_description)}</li>`)
-//         //     .join('');
-//         document.getElementById('historyContent').innerHTML = `<ul class="list-unstyled">${historyHTML}</ul>`;
-//         const modal = new bootstrap.Modal(document.getElementById('viewHistoryModal'));
-//         modal.show();
-
-
-
-//     } catch (error) {
-//         console.error('Error fetching audit history:', error);
-//         alert(`Error: ${error.message}`);
-//     }
-// }
 
 
 //--- Handle View History ---
@@ -804,9 +738,6 @@ async function handleViewHistory(event) {
         alert(`Error: ${error.message}`);
     }
 }
-
-
-
 
 
 

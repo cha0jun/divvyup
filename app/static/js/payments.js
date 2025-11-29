@@ -1,11 +1,6 @@
 let payments = [];
 let members = [];
 let groupData = null;
-// function getMembers() {
-//     // membersData comes from groupdetails.js
-//     return window.membersData || [];
-// }
-
 let currentPaymentId = null;
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -27,15 +22,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-
     // Populate member dropdowns
     function populateMemberDropdowns() {
         const editPayerSelect = document.getElementById('editPayerId');
         const editPayeeSelect = document.getElementById('editPayeeId');
-
-
-        // // Get members from groupdetails.js
-        // const members = getMembers();
 
         if (members.length === 0) {
             console.warn('No members available yet');
@@ -63,7 +53,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         return isAdmin || isCreator;
     }
-
 
 
     // Render payments table
@@ -130,12 +119,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         editModal.show();
     };
-
-    // // Handle delete
-    // window.handleDelete = function (paymentId) {
-    //     currentPaymentId = paymentId;
-    //     deleteModal.show();
-    // };
 
     window.handleDelete = function (paymentId) {
         const payment = payments.find(p => p.id === paymentId);

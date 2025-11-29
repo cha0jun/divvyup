@@ -28,11 +28,8 @@ class UserLogin(BaseModel):
     
 
 class MemberCreate(BaseModel):
-    #User.id of the new user to be added to the group
-    # user_id: int 
     email: EmailStr
-    # is_admin: bool = False
-    #description not showing on swagger 
+  
 
 class MemberUpdate(BaseModel):
     is_admin: bool

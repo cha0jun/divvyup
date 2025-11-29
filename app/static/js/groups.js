@@ -41,7 +41,6 @@ function displayGroups(groups) {
         return;
     }
 
-    // Clear container
     container.innerHTML = '';
 
     // Display groups up to currentDisplayCount

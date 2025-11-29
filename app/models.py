@@ -219,28 +219,8 @@ class Payment(SQLModel, table=True):
         back_populates="payments_received",
         sa_relationship_kwargs={"foreign_keys": "[Payment.payee_id]"}
     )
-    # receipts: List["PaymentReceipt"] = Relationship(
-    #     back_populates="payment",
-    #     sa_relationship_kwargs={"cascade": "all, delete-orphan"}
-    # )
 
-
-# class PaymentReceipt(SQLModel, table=True):
-#     __tablename__ = "payment_receipt"
-    
-#     id: Optional[int] = Field(default=None, primary_key=True)
-#     payment_id: int = Field(foreign_key="payment.id")
-#     file_url: str
-#     file_name: str
-#     uploaded_by: int = Field(foreign_key="user.id")
-#     uploaded_on: datetime = Field(
-#         default_factory=lambda: datetime.now(timezone.utc),
-#         sa_column=Column(DateTime, nullable=False)
-#     )
-    
-#     payment: Payment = Relationship(back_populates="receipts")
- 
-    
+   
 class Audit(SQLModel, table = True):
     __tablename__ = "audit"
     
