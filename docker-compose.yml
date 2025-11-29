@@ -1,9 +1,27 @@
 services:
+  # 1. THE TEST SERVICE
+  tests:
+    build: .
+    container_name: app-tests
+    # Overwrite the command to run pytest instead of starting the server
+    command: python -m pytest
+    # Mount the code so changes are reflected immediately
+    volumes:
+      - .:/app
+    # Ensure tests don't restart automatically if they fail
+    restart: "no"
+    # (Optional) If your app code crashes on import without DB env vars,
+    # keep these. If you use SQLite for tests, you might not need them.
+    environment:
+      - SECRET_KEY=${SECRET_KEY}
+      - ENV=TEST
   app: # Name of the service
     build: . # Build from the Dockerfile in the current directory
     depends_on:
       db:
         condition: service_healthy
+      tests:
+        condition: service_completed_successfully
     environment:
       - DB_HOST=db
       - DB_USER=root
