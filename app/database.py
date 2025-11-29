@@ -30,8 +30,6 @@ if env in "DEV, STG, TEST":
     # 5. Create the database URL with the absolute path
     DATABASE_URL = f"sqlite:///{DATABASE_PATH}"
 
-    #May added connect_args={"check_same_thread": False}
-    # engine = create_engine(DATABASE_URL, echo=False, connect_args={"check_same_thread": False})
     engine = create_engine(DATABASE_URL, echo=False)
 
 elif env == "PRD":

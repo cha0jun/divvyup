@@ -54,10 +54,7 @@ def get_member_by_member_id(db: Session, member_id: int)-> Member | None:
 def create_member(db: Session, user_to_add: User, group_id: int, added_by_user_id: int) -> Member:
     """Creates a new member in a group."""
     inviter_is_member = get_member(db, user_id=added_by_user_id, group_id=group_id)
-    if not inviter_is_member:
-        # Check if Invter is from the Expense Group.
-        raise HTTPException(status_code=404, detail="Inviter is not a member of the group.")
-
+    
     member = Member(
         user_id=user_to_add.id, 
         expense_group_id=group_id, 
