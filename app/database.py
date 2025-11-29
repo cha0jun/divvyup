@@ -10,7 +10,7 @@ load_dotenv()
 
 env = SECRET = os.environ.get("ENV")
 
-if env in "DEV, STG":
+if env in "DEV, STG, TEST":
     # dev config
     # 1. Get the path to the current file (e.g., .../project-folder/app/database.py)
     current_file_path = Path(__file__).resolve()

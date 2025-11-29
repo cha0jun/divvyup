@@ -1,14 +1,11 @@
 import pytest
-import json
-import os
 from fastapi.testclient import TestClient
-from sqlmodel import Session, SQLModel, create_engine, select
-from fastapi import UploadFile
+from sqlmodel import Session, SQLModel, create_engine
 
 # --- Imports from your actual project ---
 # Adjust these paths to match your project structure
 from main import app  
-from app.models import User, Expense, ExpenseGroup, Member # Import your SQLModels
+from app.models import User, ExpenseGroup, Member # Import your SQLModels
 from app.auth import get_current_user # Import your Auth dependency function
 from app.database import SessionDep
 
