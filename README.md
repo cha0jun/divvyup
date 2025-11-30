@@ -137,12 +137,8 @@ Cross-Cutting Concerns (Used Across All Layers):
 └────────────────────────────────────────────────────────┘
 ```
 
-### CLass Diagram
+### Class Diagram
 ```mermaid
-%%{init: {'theme':'base', 'themeVariables': { 
-    'primaryColor':'#fff','primaryTextColor':'#000',
-    'primaryBorderColor':'#000','lineColor':'#000'
-}}}%%
 classDiagram
     direction LR
 
